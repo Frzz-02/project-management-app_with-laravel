@@ -25,8 +25,8 @@ class UpdateProjectRequest extends FormRequest
     {
         return [
             'project_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'deadline' => 'required|date|after_or_equal:today',
+            'description' => 'nullable|string',
         ];
     }
 

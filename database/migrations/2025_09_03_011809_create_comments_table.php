@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(\App\Models\Card::class, 'card_id')->nullable()->constrained('cards')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\Subtask::class, 'subtask_id')->constrained('subtasks')->onDelete('cascade'); // Fix: constrained ke subtasks bukan comments
+            $table->foreignIdFor(\App\Models\Subtask::class, 'subtask_id')->nullable()->constrained('subtasks')->onDelete('cascade'); // Fix: constrained ke subtasks bukan comments
             $table->foreignIdFor(\App\Models\User::class, 'user_id')->constrained('users')->onDelete('cascade');
             $table->text('comment_text');
             $table->enum("comment_type", ['card', 'subtask']);
-            $table->timestamp("created_at")->useCurrent(); // Fix: create_at -> created_at
+            $table->timestamps(); // Laravel expects both created_at and updated_at
         });
     }
 

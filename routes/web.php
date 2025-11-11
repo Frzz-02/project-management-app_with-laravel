@@ -1,8 +1,16 @@
 <?php
 
 use App\Http\Controllers\web\AuthenticationController;
+use App\Http\Controllers\web\BoardController;
+use App\Http\Controllers\web\CardController;
+use App\Http\Controllers\web\CardAssignmentController;
+use App\Http\Controllers\web\CommentController;
 use App\Http\Controllers\web\ProjectController;
+use App\Http\Controllers\web\ProjectMemberController;
+use App\Http\Controllers\web\SubtaskController;
+use App\Http\Controllers\web\TimeLogController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * ROUTE DOCUMENTATION
@@ -22,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Halaman utama - redirect ke login jika belum login, ke dashboard jika sudah login
-Route::get('/', fn() => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'))
+Route::get('/', fn() => Auth::check() ? redirect()->route('dashboard') : redirect()->route('login'))
 ->name('home');
 
 // Authentication routes (login, register, forgot password, dll)
@@ -59,7 +67,7 @@ Route::post('/register', [AuthenticationController::class, 'register'])
 |--------------------------------------------------------------------------
 */
 
-// Route::middleware('auth')->group(function () {
+Route::middleware('auth')->group(function () {
     
     /**
      * Dashboard Routes
@@ -89,6 +97,158 @@ Route::post('/register', [AuthenticationController::class, 'register'])
         'destroy' => 'projects.destroy',    // DELETE /projects/{project}
     ]);
 
+    
+    
+    
+    
+    /**
+     * Project Routes
+     * ==============
+     * Route untuk mengelola project (CRUD)
+     */
+    Route::resource('boards', BoardController::class)->names([
+        'index' => 'boards.index',        // GET /boards
+        'create' => 'boards.create',      // GET /boards/create
+        'store' => 'boards.store',        // POST /boards
+        'show' => 'boards.show',          // GET /boards/{project}
+        'edit' => 'boards.edit',          // GET /boards/{project}/edit
+        'update' => 'boards.update',      // PUT/PATCH /boards/{project}
+        'destroy' => 'boards.destroy',    // DELETE /projects/{project}
+    ]);
+    
+    // Additional board routes
+    Route::get('boards/{board}/members', [BoardController::class, 'getMembers'])->name('boards.members');
+
+    /**
+     * Card Routes
+     * ===========
+     * Route untuk mengelola cards dalam board kanban
+     */
+    Route::resource('cards', CardController::class)->names([
+        'index' => 'cards.index',         // GET /cards
+        'create' => 'cards.create',       // GET /cards/create  
+        'store' => 'cards.store',         // POST /cards
+        'show' => 'cards.show',           // GET /cards/{card}
+        'edit' => 'cards.edit',           // GET /cards/{card}/edit
+        'update' => 'cards.update',       // PUT/PATCH /cards/{card}
+        'destroy' => 'cards.destroy',     // DELETE /cards/{card}
+    ]);
+    
+    // Additional card routes
+    Route::patch('cards/{card}/status', [CardController::class, 'updateStatus'])->name('cards.update-status');
+    
+    /**
+     * Subtask Routes
+     * ==============
+     * Route untuk mengelola subtasks dalam card
+     * Hanya accessible oleh team lead dan project member
+     */
+    Route::post('subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');
+    Route::put('subtasks/{subtask}', [SubtaskController::class, 'update'])->name('subtasks.update');
+    Route::patch('subtasks/{subtask}/status', [SubtaskController::class, 'updateStatus'])->name('subtasks.update-status');
+    Route::delete('subtasks/{subtask}', [SubtaskController::class, 'destroy'])->name('subtasks.destroy');
+    
+    
+    
+    
+    
+    /**
+     * Time Tracking Routes
+     * ====================
+     * Route untuk mengelola time tracking (start/stop timer, view logs, calculate total)
+     * 
+     * Fitur utama:
+     * - Start tracking waktu kerja pada card/subtask
+     * - Stop tracking dan auto-calculate durasi
+     * - Update description time log
+     * - Delete time log
+     * - Get total waktu per card
+     * - Get total waktu per subtask
+     * 
+     * Method:
+     * - POST /time-logs/start          -> Start tracking (card_id atau subtask_id required)
+     * - POST /time-logs/{timeLog}/stop -> Stop tracking dan hitung durasi
+     * - PUT /time-logs/{timeLog}       -> Update description
+     * - DELETE /time-logs/{timeLog}    -> Delete time log (hanya owner)
+     * - GET /time-logs/card/{cardId}   -> Get total waktu untuk card (JSON response)
+     * - GET /time-logs/subtask/{subtaskId} -> Get total waktu untuk subtask (JSON response)
+     */
+    Route::post('time-logs/start', [TimeLogController::class, 'startTracking'])->name('time-logs.start');
+    Route::post('time-logs/{timeLog}/stop', [TimeLogController::class, 'stopTracking'])->name('time-logs.stop');
+    Route::put('time-logs/{timeLog}', [TimeLogController::class, 'update'])->name('time-logs.update');
+    Route::delete('time-logs/{timeLog}', [TimeLogController::class, 'destroy'])->name('time-logs.destroy');
+    
+    // API-style routes untuk mendapatkan total waktu (return JSON)
+    Route::get('time-logs/card/{cardId}', [TimeLogController::class, 'getTotalTimeByCard'])->name('time-logs.total-card');
+    Route::get('time-logs/subtask/{subtaskId}', [TimeLogController::class, 'getTotalTimeBySubtask'])->name('time-logs.total-subtask');
+    
+
+
+    // ========================================
+    // COMMENT ROUTES
+    // ========================================
+    // Routes untuk mengelola komentar pada card dan subtask
+    // - Card comments: Semua role bisa lihat, Team Lead hanya bisa comment di card yang dibuat/ditugaskan
+    // - Subtask comments: Hanya Developer/Designer yang bisa lihat dan manipulasi
+    
+    // Create comment (Card atau Subtask)
+    Route::post('comments', [CommentController::class, 'store'])->name('comments.store');
+    
+    // Update comment (hanya owner yang bisa edit)
+    Route::put('comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    
+    // Delete comment (hanya owner yang bisa delete)
+    Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    
+    // API-style routes untuk mendapatkan komentar (return JSON untuk AJAX)
+    Route::get('comments/card/{cardId}', [CommentController::class, 'getCommentsForCard'])->name('comments.card');
+    Route::get('comments/subtask/{subtaskId}', [CommentController::class, 'getCommentsForSubtask'])->name('comments.subtask');
+    
+    
+    
+    /**
+     * CARD ASSIGNMENTS ROUTES
+     * ========================================
+     * Routes untuk assign/unassign members ke card
+     * - Hanya Team Lead atau Card Creator yang bisa assign
+     * - Return JSON untuk AJAX request
+     */
+    Route::post('card-assignments/assign', [CardAssignmentController::class, 'assign'])->name('card-assignments.assign');
+    Route::post('card-assignments/unassign', [CardAssignmentController::class, 'unassign'])->name('card-assignments.unassign');
+    
+    
+    
+    // Test route for simple cards view
+    Route::get('cards-simple', function() {
+        $cards = \App\Models\Card::with(['board', 'creator'])->paginate(12);
+        return view('cards.simple', compact('cards'));
+    })->name('cards.simple');
+    
+    /**
+     * Additional Project Members Routes
+     * ================================
+     * Route tambahan untuk fitur khusus project members
+     * PENTING: Letakkan sebelum resource routes agar tidak tertangkap sebagai {id}
+     */
+    
+    // Route untuk search available users (AJAX endpoint untuk invite modal)
+    Route::get('/project-members/search-users', [ProjectMemberController::class, 'searchUsers'])
+        ->name('project-members.search-users');
+
+
+
+    /**
+     * Project Members Routes
+     * =====================
+     * Route untuk mengelola project members (CRUD)
+     */
+    Route::resource('project-members', ProjectMemberController::class)->names([
+        'index' => 'project-members.index',        // GET /project-members
+        'store' => 'project-members.store',        // POST /project-members
+        'update' => 'project-members.update',      // PUT/PATCH /project-members/{project}
+        'destroy' => 'project-members.destroy',    // DELETE /project-members/{project}
+    ]);
+
 
 
 
@@ -106,6 +266,8 @@ Route::post('/register', [AuthenticationController::class, 'register'])
     // Route untuk menampilkan project dimana user adalah anggota tim
     Route::get('/joined-projects', [ProjectController::class, 'joinedProjects'])
         ->name('projects.joined-projects');
+
+});
 
 
 

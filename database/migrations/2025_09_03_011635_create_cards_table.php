@@ -34,7 +34,7 @@ return new class extends Migration
             
             // Timestamps dan deadline
             $table->timestamp("created_at")->useCurrent();
-            $table->date("due_date")->nullable();
+            $table->date("due_date");
             
             // Status dan prioritas
             $table->enum('status', ['todo', 'in progress','review', 'done'])->default('todo');

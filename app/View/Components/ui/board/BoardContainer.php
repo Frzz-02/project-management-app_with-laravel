@@ -1,6 +1,6 @@
 <?php
 
-namespace App\View\Components\ui;
+namespace App\View\Components\ui\board;
 
 use Closure;
 use Illuminate\View\Component;
@@ -22,6 +22,6 @@ class BoardContainer extends Component
      */
     public function render()
     {
-        return view('components.ui.board-container');
+        return view('components.ui.board.board-container');
     }
 }

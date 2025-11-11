@@ -26,9 +26,9 @@ class Card extends Model
     protected $table = 'cards';
 
     /**
-     * Model ini tidak menggunakan updated_at (hanya created_at)
+     * Model ini menggunakan custom timestamps
      */
-    public $timestamps = false;
+    const UPDATED_AT = null;
 
     /**
      * Field yang boleh diisi secara mass assignment
@@ -103,9 +103,30 @@ class Card extends Model
         return $this->hasMany(Comment::class, 'card_id', 'id');
     }
     
-    
-    
-    
+    /**
+     * Relasi ke CardAssignment (One to Many)
+     * 
+     * Satu card bisa memiliki banyak assignment ke users
+     * Field: id -> card_assignments.card_id
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(CardAssignment::class, 'card_id', 'id');
+    }
+
+    /**
+     * Relasi ke TimeLog (One to Many)
+     * 
+     * Satu card bisa memiliki banyak time logs
+     * Field: id -> time_logs.card_id
+     * 
+     * Note: TimeLog dengan subtask_id NULL adalah card tracking
+     *       TimeLog dengan subtask_id NOT NULL adalah subtask tracking
+     */
+    public function timeLogs(): HasMany
+    {
+        return $this->hasMany(TimeLog::class, 'card_id', 'id');
+    }
     
     /**
      * ====================================
@@ -176,5 +197,43 @@ class Card extends Model
             'high' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800'
         };
+    }
+
+
+
+    /**
+     * ====================================
+     * HELPER METHODS UNTUK TIME TRACKING
+     * ====================================
+     */
+
+    /**
+     * Cek apakah card ini sudah pernah di-start tracking (punya completed time log)
+     * 
+     * @return bool
+     */
+    public function hasBeenTracked(): bool
+    {
+        return $this->timeLogs()->whereNotNull('end_time')->exists();
+    }
+
+    /**
+     * Cek apakah card ini sedang di-track (punya ongoing time log)
+     * 
+     * @return bool
+     */
+    public function isBeingTracked(): bool
+    {
+        return $this->timeLogs()->whereNull('end_time')->exists();
+    }
+
+    /**
+     * Get ongoing time log untuk card ini
+     * 
+     * @return \App\Models\TimeLog|null
+     */
+    public function getOngoingTimeLog()
+    {
+        return $this->timeLogs()->whereNull('end_time')->first();
     }
 }

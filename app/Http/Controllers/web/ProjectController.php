@@ -113,9 +113,8 @@ class ProjectController extends Controller
      * Menyimpan project baru ke database dengan validasi dari StoreProjectRequest.
      * Setelah project dibuat, otomatis menambahkan creator sebagai anggota tim.
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
-        dd($request->all());
         try {
             // Mulai database transaction untuk memastikan data consistency
             DB::beginTransaction();
@@ -218,7 +217,7 @@ class ProjectController extends Controller
         $userRole = $isMember ? $project->members()->where('user_id', Auth::id())->first()->role : null;
 
 
-        // dd($project->toArray());
+        // dd($statistics);
         return view('projects.show', compact('project', 'statistics', 'isMember', 'userRole'));
     }
 
@@ -241,17 +240,24 @@ class ProjectController extends Controller
     public function edit(Project $project)
     {
         // Cek authorization - hanya creator atau team lead yang bisa edit
-        $userRole = $project->members()->where('user_id', Auth::id())->first()?->role;
+        $userRole = auth()->user()->role;
+
+        // dd([
+        //     'project_creator' => $project->created_by,
+        //     'current_user' => Auth::id(),
+        //     'user_role' => $userRole,
+        // ]);
         
-        if ($project->created_by !== Auth::id() && $userRole !== 'team lead') {
+        
+        if ($project->created_by != Auth::id() && $userRole !== 'admin') {
             return redirect()
                 ->route('projects.show', $project)
                 ->with('error', 'Anda tidak memiliki akses untuk mengedit project ini.');
-        }
+        }   
 
         // Mengambil daftar users untuk dropdown (jika diperlukan)
-        $users = User::select('id', 'name', 'email')
-            ->orderBy('name')
+        $users = User::select('id', 'full_name', 'email')
+            ->orderBy('full_name')
             ->get();
 
         return view('projects.edit', compact('project', 'users'));
@@ -272,32 +278,19 @@ class ProjectController extends Controller
      * Mengupdate data project dengan validasi dari UpdateProjectRequest.
      * Hanya creator atau team lead yang bisa mengupdate.
      */
-    public function update(Request $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project)
     {
-        dd($request->all());
+        // Authorization check via Policy
+        $this->authorize('update', $project);
+        
         try {
-            // Cek authorization
-            $userRole = $project->members()->where('user_id', Auth::id())->first()?->role;
-            
-            if ($project->created_by !== Auth::id() && $userRole !== 'team lead') {
-                return redirect()
-                    ->route('projects.show', $project)
-                    ->with('error', 'Anda tidak memiliki akses untuk mengupdate project ini.');
-            }
-
             // Mulai transaction
             DB::beginTransaction();
 
             // Ambil data yang sudah divalidasi
             $validatedData = $request->validated();
             
-            // Mapping field name jika ada project_name
-            if (isset($validatedData['project_name'])) {
-                $validatedData['name'] = $validatedData['project_name'];
-                unset($validatedData['project_name']);
-            }
-            
-            // Format deadline
+            // Format deadline jika ada
             if (isset($validatedData['deadline'])) {
                 $validatedData['deadline'] = Carbon::parse($validatedData['deadline'])->format('Y-m-d');
             }

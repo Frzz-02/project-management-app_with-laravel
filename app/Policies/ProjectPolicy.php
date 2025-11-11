@@ -35,7 +35,7 @@ class ProjectPolicy
     public function view(User $user, Project $project): bool
     {
         // Admin bisa lihat semua project
-        if ($user->role === 'admin') {
+        if ($user->role == 'admin') {
             return true;
         }
         
@@ -50,27 +50,43 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        return $user->role == 'admin';
     }
 
     /**
      * Determine whether the user can update the model.
      * 
-     * Update project - hanya admin yang bisa
+     * Update project:
+     * - Admin bisa update semua project
+     * - Creator bisa update project yang dia buat
      */
     public function update(User $user, Project $project): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa update semua project
+        if ($user->role == 'admin') {
+            return true;
+        }
+        
+        // Creator bisa update project yang dia buat
+        return $project->created_by == $user->id;
     }
 
     /**
      * Determine whether the user can delete the model.
      * 
-     * Hapus project - hanya admin yang bisa
+     * Hapus project:
+     * - Admin bisa hapus semua project
+     * - Creator bisa hapus project yang dia buat
      */
     public function delete(User $user, Project $project): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa hapus semua project
+        if ($user->role == 'admin') {
+            return true;
+        }
+        
+        // Creator bisa hapus project yang dia buat
+        return $project->created_by == $user->id;
     }
 
     /**
@@ -78,7 +94,7 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project): bool
     {
-        return $user->role === 'admin';
+        return $user->role == 'admin';
     }
 
     /**
@@ -86,6 +102,6 @@ class ProjectPolicy
      */
     public function forceDelete(User $user, Project $project): bool
     {
-        return $user->role === 'admin';
+        return $user->role == 'admin';
     }
 }

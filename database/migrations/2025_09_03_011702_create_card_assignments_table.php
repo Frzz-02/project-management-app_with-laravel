@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(\App\Models\Card::class, 'card_id')->constrained('cards')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\User::class, 'user_id')->constrained('users')->onDelete('cascade');
-            $table->enum('role', ['assigned', 'in progress', 'completed'])->default('assigned');
+            $table->timestamp("assigned_at")->timestamp()->useCurrent();
+            $table->enum('assignment_status', ['assigned', 'in progress', 'completed'])->default('assigned');
             $table->timestamp("started_at")->nullable();
             $table->timestamp("completed_at")->nullable();
         });

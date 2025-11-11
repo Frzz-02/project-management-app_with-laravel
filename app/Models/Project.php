@@ -27,6 +27,9 @@ class Project extends Model
      */
     protected $table = 'projects';
 
+    public $timestamps = false;
+    
+    
     /**
      * Field yang boleh diisi secara mass assignment
      * 
@@ -34,6 +37,7 @@ class Project extends Model
      */
     protected $fillable = [
         'project_name',           // Nama project
+        'slug',           // Slug untuk URL (auto-generated dari project_name)
         'description',    // Deskripsi project (nullable)
         'deadline',       // Tanggal deadline (date)
         'created_by',     // ID user yang membuat project (foreign key)

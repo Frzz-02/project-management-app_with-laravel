@@ -24,7 +24,7 @@ class TimeLog extends Model
      * Nama tabel yang digunakan oleh model ini
      */
     protected $table = 'time_logs';
-
+    public $timestamps = false;
     /**
      * Field yang boleh diisi secara mass assignment
      */
@@ -44,8 +44,8 @@ class TimeLog extends Model
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        // 'created_at' => 'datetime',
+        // 'updated_at' => 'datetime',
         'duration_minutes' => 'integer',
     ];
 

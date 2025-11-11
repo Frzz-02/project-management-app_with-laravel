@@ -161,12 +161,12 @@
                         @endif
                         
                         <!-- Manage Members Button -->
-                        <button class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                        <a href="{{ route('project-members.index', ['project' => $project->slug]) }}" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-.5a4 4 0 110 5.292"/>
                             </svg>
                             Manage Team
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -328,7 +328,7 @@
                             </div>
                             <h3 class="text-xl font-semibold text-gray-800">Team Members</h3>
                         </div>
-                        <button class="text-purple-600 hover:text-purple-800 font-medium text-sm">View All</button>
+                        <a href="{{ route('project-members.index', $project->id) }}" class="text-purple-600 hover:text-purple-800 font-medium text-sm">View All</a>
                     </div>
                     
                     <!-- Members List -->
@@ -431,10 +431,10 @@
             
             <!-- Project Boards Card -->
             <div class="xl:col-span-2">
-                <x-ui.board-container :isCardStatus="true">
+                <x-ui.board.board-container :isCardStatus="true">
                     <!-- Boards Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <x-ui.board-card 
+                        <x-ui.board.board-card 
                             name="Todo" 
                             description="Todo" 
                             totalCards="3"> 
@@ -450,21 +450,21 @@
                                     taskName="Research Competitors" 
                                     description="Analyze competitor products and market strategies." 
                                     taskStatus="todo" />
-                        </x-ui.board-card>
+                        </x-ui.board.board-card>
 
 
 
-                        <x-ui.board-card name="In Progress" description="inProgress" totalCards="3" />
+                        <x-ui.board.board-card name="In Progress" description="inProgress" totalCards="3" />
 
 
 
-                        <x-ui.board-card name="Review" description="Review" totalCards="3" />
+                        <x-ui.board.board-card name="Review" description="Review" totalCards="3" />
 
 
                         
-                        <x-ui.board-card name="Done" description="Done" totalCards="3" />
+                        <x-ui.board.board-card name="Done" description="Done" totalCards="3" />
                     </div>    
-                </x-ui.board-container> 
+                </x-ui.board.board-container> 
             </div>
 
         </div>
@@ -489,20 +489,25 @@
                     
                     
                     
+
                     
+                    {{-- board task --}}
                     <div class="xl:col-span-full">
 
-                        <x-ui.board-container>
+                        <x-ui.board.board-container>
             
                             <!-- Boards Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-3  gap-4">
                             @if( isset($project) && $project->boards->isNotEmpty() )
                                 @foreach ($project->boards as $board)
 
-                                    <x-ui.board-card 
-                                        :name="$board->board_name" 
-                                        :description="$board->description" 
-                                        :totalCards="$board->cards_count" >
+                                    <div class="relative">
+                                        <x-ui.board.board-card 
+                                            :name="$board->board_name" 
+                                            :description="$board->description" 
+                                            :totalCards="$board->cards_count"
+                                            :board="$board"
+                                            :boardUrl="route('boards.show', $board->id)" >
                                 
                                         @if($board->cards->isNotEmpty())
                                             @foreach ($board->cards as $card)
@@ -515,7 +520,11 @@
                                             <p class="text-gray-500 text-center text-sm">No cards available in this board.</p>
                                         @endif
                                         
-                                    </x-ui.board-card>
+                                        </x-ui.board.board-card>
+                                        
+                                        {{-- Delete Confirmation Modal untuk setiap board --}}
+                                        <x-ui.board.delete-board-modal :board="$board" />
+                                    </div>
                                 
                                 @endforeach                    
                                 
@@ -526,12 +535,16 @@
                                     </div>
                                 @endif
                             </div>
-                        </x-ui.board-container>
+                        </x-ui.board.board-container>
                     </div>
-            
-            
-        </div>
-    </div>
+
+                    
+                    
+                    
+                    
+                </div>
+            </div>
+            <x-ui.board.add-board-modal :project="$project" :nextPosition="$statistics['total_boards'] + 1" />
 </div>
 
 

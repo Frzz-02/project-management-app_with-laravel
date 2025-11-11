@@ -23,10 +23,8 @@ class UpdateBoardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_id' => 'required|exists:projects,id',
             'board_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'position' => 'nullable|integer|min:0',
         ];
     }
 
@@ -38,17 +36,11 @@ class UpdateBoardRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'project_id.required' => 'Proyek wajib dipilih.',
-            'project_id.exists' => 'Proyek yang dipilih tidak valid.',
-            
             'board_name.required' => 'Nama board wajib diisi.',
             'board_name.string' => 'Nama board harus berupa teks.',
             'board_name.max' => 'Nama board tidak boleh lebih dari 255 karakter.',
             
-            'description.string' => 'Deskripsi harus berupa teks.',
-            
-            'position.integer' => 'Posisi harus berupa angka.',
-            'position.min' => 'Posisi tidak boleh bernilai negatif.',
+            'description.string' => 'Deskripsi harus berupa teks.'
         ];
     }
 
@@ -60,10 +52,8 @@ class UpdateBoardRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'project_id' => 'proyek',
             'board_name' => 'nama board',
             'description' => 'deskripsi',
-            'position' => 'posisi',
         ];
     }
 }

@@ -17,7 +17,11 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'project_name' => fake()->sentence(3), // Slug akan auto-generated dari project_name via Observer
+            'description' => fake()->paragraph(),
+            'created_by' => 1,
+            'deadline' => fake()->dateTimeBetween('now', '+1 year'),
+            'created_at' => now(),
         ];
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\View\Components\ui;
+namespace App\View\Components\ui\board;
 
 use Closure;
 use Illuminate\Contracts\View\View;
@@ -11,18 +11,38 @@ class BoardCard extends Component
     public $name;
     public $description;
     public $totalCards;
+    public $board;
+    public $boardUrl;
     public $cardColorStyle;
     public $badgeColorStyle;
 
     
     /**
      * Create a new component instance.
+     * 
+     * @param string $name - Nama board
+     * @param string $description - Deskripsi board
+     * @param int $totalCards - Jumlah cards dalam board
+     * @param mixed $board - Board model instance (optional untuk delete functionality)
+     * @param string $boardUrl - URL untuk navigasi ke board detail
+     * @param string $cardColorStyle - Gradient color style
+     * @param string $badgeColorStyle - Badge color style
      */
-    public function __construct( $name, $description, $totalCards, $cardColorStyle = 'from-gray-50 to-blue-50', $badgeColorStyle = 'bg-blue-100 text-blue-800')
+    public function __construct(
+        $name, 
+        $description, 
+        $totalCards, 
+        $board = null,
+        $boardUrl = null,
+        $cardColorStyle = 'from-gray-50 to-blue-50', 
+        $badgeColorStyle = 'bg-blue-100 text-blue-800'
+    )
     {
         $this->name = $name;
         $this->description = $description;
         $this->totalCards = $totalCards;
+        $this->board = $board;
+        $this->boardUrl = $boardUrl;
         $this->cardColorStyle = $cardColorStyle;
         $this->badgeColorStyle = $badgeColorStyle;
     }
@@ -49,6 +69,6 @@ class BoardCard extends Component
     {
         $this->badgeColorStyle = $this->changeColorStyle()[1];
         $this->cardColorStyle = $this->changeColorStyle()[0];
-        return view('components.ui.board-card');
+        return view('components.ui.board.board-card');
     }
 }

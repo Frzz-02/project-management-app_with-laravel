@@ -1,0 +1,1291 @@
+@extends('layouts.app')@extends('layouts.app')
+
+
+
+@section('title', 'Cards Management')@section('title', 'Cards Management')
+
+
+
+@section('content')@section('content')
+
+
+
+<!-- ============================================================================ --><!-- ============================================================================ -->
+
+<!-- MAIN CONTAINER WITH GRADIENT BACKGROUND                                     --><!-- MAIN CONTAINER WITH GRADIENT BACKGROUND                                     -->
+
+<!-- Container utama dengan gradient background untuk estetika modern            --><!-- Container utama dengan gradient background untuk estetika modern            -->
+
+<!-- ============================================================================ --><!-- ============================================================================ -->
+
+
+
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50" x-data="cardsPageData()"><div class="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50" x-data="cardsPageData()">
+
+
+
+    <!-- ============================================================================ -->    <!-- ============================================================================ -->
+
+    <!-- HEADER SECTION WITH NAVIGATION                                              -->    <!-- HEADER SECTION WITH NAVIGATION                                              -->
+
+    <!-- Sticky header dengan title, actions, dan navigasi utama                     -->    <!-- Sticky header dengan title, actions, dan navigasi utama                     -->
+
+    <!-- ============================================================================ -->    <!-- ============================================================================ -->
+
+
+
+    <div class="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg">    <div class="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg">
+
+        <div class="max-w-full mx-auto px-6 py-6">        <div class="max-w-full mx-auto px-6 py-6">
+
+                        
+
+            <!-- Page Title & Actions -->            <!-- Page Title & Actions -->
+
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+
+                <div>                <div>
+
+                    <h1 class="text-3xl font-bold text-gray-900">Cards Management</h1>                    <h1 class="text-3xl font-bold text-gray-900">Cards Management</h1>
+
+                    <p class="text-gray-600 mt-1">Manage and track all your tasks across projects</p>                    <p class="text-gray-600 mt-1">Manage and track all your tasks across projects</p>
+
+                </div>                </div>
+
+
+
+                <!-- Action Buttons untuk create card dan toggle view -->                
+
+                <div class="flex items-center space-x-3">
+
+                    <!-- New Card Button dengan gradient background -->    <!-- Statistics Cards -->                <div class="flex items-center space-x-3">
+
+                    <a href="{{ route('cards.create') }}" 
+
+                       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-lg">    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">                    <button @click="$dispatch('create-card-modal')" 
+
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-lg">
+
+                        </svg>
+
+                        New Card            <div class="flex items-center justify-between">                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    </a>
+
+                <div>                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+
+                    <!-- View Toggle Button untuk switch antara grid dan list -->
+
+                    <button @click="toggleView()"                     <p class="text-gray-500 text-sm font-medium">Total Cards</p>                        </svg>
+
+                            class="inline-flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+
+                        <svg x-show="currentView === 'grid'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">                    <p class="text-2xl font-bold text-gray-900">{{ $statistics['total_cards'] }}</p>                        New Card
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+
+                        </svg>                </div>                    </button>
+
+                        <svg x-show="currentView === 'list'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>                <div class="p-3 bg-blue-100 rounded-full">                    
+
+                        </svg>
+
+                        <span x-text="currentView === 'grid' ? 'List View' : 'Grid View'"></span>                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">                    <button @click="toggleView()" 
+
+                    </button>
+
+                </div>                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>                            class="inline-flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+
+            </div>
+
+        </div>                    </svg>                        <svg x-show="currentView === 'grid'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+    </div>
+
+                </div>                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+
+
+
+            </div>                        </svg>
+
+
+
+    <!-- ============================================================================ -->        </div>                        <svg x-show="currentView === 'list'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+    <!-- STATISTICS DASHBOARD SECTION                                                -->
+
+    <!-- Dashboard dengan cards statistik yang menampilkan ringkasan data           -->                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+
+    <!-- ============================================================================ -->
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">                        </svg>
+
+    <div class="max-w-full mx-auto px-6 py-6">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">            <div class="flex items-center justify-between">                        <span x-text="currentView === 'grid' ? 'List View' : 'Grid View'"></span>
+
+            
+
+            <!-- Total Cards Statistic -->                <div>                    </button>
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">                    <p class="text-gray-500 text-sm font-medium">In Progress</p>                </div>
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                    <p class="text-2xl font-bold text-yellow-600">{{ $statistics['in_progress_cards'] }}</p>            </div>
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+
+                        </svg>                </div>
+
+                    </div>
+
+                    <div class="ml-3">                <div class="p-3 bg-yellow-100 rounded-full">
+
+                        <p class="text-sm font-medium text-gray-600">Total</p>
+
+                        <p class="text-2xl font-bold text-gray-900">{{ $cards->total() }}</p>                    <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">            <!-- Statistics Cards Row -->
+
+                    </div>
+
+                </div>                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+
+            </div>
+
+                    </svg>                
+
+
+
+            <!-- Todo Cards Statistic -->                </div>                <!-- Total Cards -->
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">            </div>                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">        </div>                    <div class="flex items-center">
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+
+                        </svg>                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+
+                    </div>
+
+                    <div class="ml-3">        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                        <p class="text-sm font-medium text-gray-600">Todo</p>
+
+                        <p class="text-2xl font-bold text-gray-900">{{ $cards->where('status', 'todo')->count() }}</p>            <div class="flex items-center justify-between">                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+
+                    </div>
+
+                </div>                <div>                            </svg>
+
+            </div>
+
+                    <p class="text-gray-500 text-sm font-medium">Completed</p>                        </div>
+
+
+
+            <!-- In Progress Cards Statistic -->                    <p class="text-2xl font-bold text-green-600">{{ $statistics['done_cards'] }}</p>                        <div class="ml-3">
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">                </div>                            <p class="text-sm font-medium text-gray-600">Total</p>
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                <div class="p-3 bg-green-100 rounded-full">                            <p class="text-2xl font-bold text-gray-900">{{ $statistics['total_cards'] }}</p>
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+
+                        </svg>                    <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">                        </div>
+
+                    </div>
+
+                    <div class="ml-3">                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>                    </div>
+
+                        <p class="text-sm font-medium text-gray-600">In Progress</p>
+
+                        <p class="text-2xl font-bold text-blue-600">{{ $cards->where('status', 'in progress')->count() }}</p>                    </svg>                </div>
+
+                    </div>
+
+                </div>                </div>
+
+            </div>
+
+            </div>                <!-- Todo Cards -->
+
+
+
+            <!-- Review Cards Statistic -->        </div>                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">                    <div class="flex items-center">
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">                        <div class="w-12 h-12 bg-gradient-to-r from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+
+                        </svg>            <div class="flex items-center justify-between">                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    </div>
+
+                    <div class="ml-3">                <div>                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+
+                        <p class="text-sm font-medium text-gray-600">Review</p>
+
+                        <p class="text-2xl font-bold text-yellow-600">{{ $cards->where('status', 'review')->count() }}</p>                    <p class="text-gray-500 text-sm font-medium">High Priority</p>                            </svg>
+
+                    </div>
+
+                </div>                    <p class="text-2xl font-bold text-red-600">{{ $statistics['high_priority_cards'] }}</p>                        </div>
+
+            </div>
+
+                </div>                        <div class="ml-3">
+
+
+
+            <!-- Done Cards Statistic -->                <div class="p-3 bg-red-100 rounded-full">                            <p class="text-sm font-medium text-gray-600">Todo</p>
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">                    <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">                            <p class="text-2xl font-bold text-gray-900">{{ $statistics['todo_cards'] }}</p>
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>                        </div>
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+
+                        </svg>                    </svg>                    </div>
+
+                    </div>
+
+                    <div class="ml-3">                </div>                </div>
+
+                        <p class="text-sm font-medium text-gray-600">Done</p>
+
+                        <p class="text-2xl font-bold text-green-600">{{ $cards->where('status', 'done')->count() }}</p>            </div>
+
+                    </div>
+
+                </div>        </div>                <!-- In Progress Cards -->
+
+            </div>
+
+    </div>                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+
+
+            <!-- High Priority Cards Statistic -->                    <div class="flex items-center">
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">    <!-- Cards Grid -->                        <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-red-400 to-red-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+
+                        </svg>        @forelse($cards as $card)                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+
+                    </div>
+
+                    <div class="ml-3">            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">                            </svg>
+
+                        <p class="text-sm font-medium text-gray-600">High Priority</p>
+
+                        <p class="text-2xl font-bold text-red-600">{{ $cards->where('priority', 'high')->count() }}</p>                                        </div>
+
+                    </div>
+
+                </div>                <!-- Card Header -->                        <div class="ml-3">
+
+            </div>
+
+                <div class="p-4 border-b border-gray-100">                            <p class="text-sm font-medium text-gray-600">In Progress</p>
+
+
+
+            <!-- Medium Priority Cards Statistic -->                    <div class="flex items-start justify-between mb-2">                            <p class="text-2xl font-bold text-blue-600">{{ $statistics['in_progress_cards'] }}</p>
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">                        <h3 class="text-lg font-semibold text-gray-900 truncate">                        </div>
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                            {{ $card->card_title }}                    </div>
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+
+                        </svg>                        </h3>                </div>
+
+                    </div>
+
+                    <div class="ml-3">                        
+
+                        <p class="text-sm font-medium text-gray-600">Medium Priority</p>
+
+                        <p class="text-2xl font-bold text-yellow-600">{{ $cards->where('priority', 'medium')->count() }}</p>                        <!-- Priority Badge -->                <!-- Review Cards -->
+
+                    </div>
+
+                </div>                        <span class="px-2 py-1 text-xs font-medium rounded-full                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+            </div>
+
+                            @if($card->priority == 'high') bg-red-100 text-red-800                    <div class="flex items-center">
+
+
+
+            <!-- Low Priority Cards Statistic -->                            @elseif($card->priority == 'medium') bg-yellow-100 text-yellow-800                        <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+                <div class="flex items-center">                            @else bg-green-100 text-green-800 @endif">                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                            {{ ucfirst($card->priority) }}                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+
+                        </svg>                        </span>                            </svg>
+
+                    </div>
+
+                    <div class="ml-3">                    </div>                        </div>
+
+                        <p class="text-sm font-medium text-gray-600">Low Priority</p>
+
+                        <p class="text-2xl font-bold text-green-600">{{ $cards->where('priority', 'low')->count() }}</p>                        <div class="ml-3">
+
+                    </div>
+
+                </div>                    <!-- Status Badge -->                            <p class="text-sm font-medium text-gray-600">Review</p>
+
+            </div>
+
+                    <div class="flex items-center justify-between">                            <p class="text-2xl font-bold text-yellow-600">{{ $statistics['review_cards'] }}</p>
+
+        </div>
+
+    </div>                        <span class="px-3 py-1 text-sm font-medium rounded-full                        </div>
+
+
+
+                            @if($card->status == 'done') bg-green-100 text-green-800                    </div>
+
+
+
+                            @elseif($card->status == 'in progress') bg-yellow-100 text-yellow-800                </div>
+
+    <!-- ============================================================================ -->
+
+    <!-- FILTERS AND SEARCH SECTION                                                  -->                            @elseif($card->status == 'review') bg-blue-100 text-blue-800
+
+    <!-- Advanced filtering dan search functionality seperti Jira                    -->
+
+    <!-- ============================================================================ -->                            @else bg-gray-100 text-gray-800 @endif">                <!-- Done Cards -->
+
+
+
+    <div class="max-w-full mx-auto px-6 py-6">                            {{ ucfirst($card->status) }}                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-6 mb-6">
+
+            <form method="GET" action="{{ route('cards.index') }}" class="space-y-4">                        </span>                    <div class="flex items-center">
+
+                
+
+                <!-- Search Input -->                        <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+
+                <div class="flex flex-col md:flex-row gap-4">
+
+                    <div class="flex-1">                        <!-- Project & Board Info -->                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Cards</label>
+
+                        <div class="relative">                        <span class="text-xs text-gray-500">                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">                            {{ $card->board->project->project_name }} / {{ $card->board->board_name }}                            </svg>
+
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+
+                                </svg>                        </span>                        </div>
+
+                            </div>
+
+                            <input type="text"                     </div>                        <div class="ml-3">
+
+                                   name="search" 
+
+                                   id="search"                </div>                            <p class="text-sm font-medium text-gray-600">Done</p>
+
+                                   value="{{ request('search') }}"
+
+                                   placeholder="Search by title or description..."                            <p class="text-2xl font-bold text-green-600">{{ $statistics['done_cards'] }}</p>
+
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+
+                        </div>                <!-- Card Body -->                        </div>
+
+                    </div>
+
+                                    <div class="p-4">                    </div>
+
+                    <div class="flex items-end">
+
+                        <button type="submit"                     @if($card->description)                </div>
+
+                                class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+
+                            Search                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+
+                        </button>
+
+                    </div>                            {{ $card->description }}                <!-- Overdue Cards -->
+
+                </div>
+
+                        </p>                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+
+
+                <!-- Filter Row dengan 4 kolom filter dropdown -->                    @endif                    <div class="flex items-center">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                                            <div class="w-12 h-12 bg-gradient-to-r from-red-400 to-red-600 rounded-lg flex items-center justify-center">
+
+                    <!-- Status Filter -->
+
+                    <div>                    <!-- Card Meta Info -->                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+
+                        <select name="status" id="status"                     <div class="space-y-2 text-sm text-gray-500">                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                            <option value="">All Status</option>                        @if($card->due_date)                            </svg>
+
+                            <option value="todo" {{ request('status') === 'todo' ? 'selected' : '' }}>Todo</option>
+
+                            <option value="in progress" {{ request('status') === 'in progress' ? 'selected' : '' }}>In Progress</option>                            <div class="flex items-center space-x-2">                        </div>
+
+                            <option value="review" {{ request('status') === 'review' ? 'selected' : '' }}>Review</option>
+
+                            <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Done</option>                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">                        <div class="ml-3">
+
+                        </select>
+
+                    </div>                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>                            <p class="text-sm font-medium text-gray-600">Overdue</p>
+
+
+
+                                </svg>                            <p class="text-2xl font-bold text-red-600">{{ $statistics['overdue_cards'] }}</p>
+
+                    <!-- Priority Filter -->
+
+                    <div>                                <span>{{ $card->due_date->format('d M Y') }}</span>                        </div>
+
+                        <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+
+                        <select name="priority" id="priority"                             </div>                    </div>
+
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                            <option value="">All Priority</option>                        @endif                </div>
+
+                            <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
+
+                            <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Medium</option>
+
+                            <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>High</option>
+
+                        </select>                        <div class="flex items-center space-x-2">                <!-- High Priority -->
+
+                    </div>
+
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+
+
+                    <!-- Board Filter -->                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>                    <div class="flex items-center">
+
+                    <div>
+
+                        <label for="board_id" class="block text-sm font-medium text-gray-700 mb-2">Board</label>                            </svg>                        <div class="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
+
+                        <select name="board_id" id="board_id" 
+
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">                            <span>{{ $card->creator->full_name }}</span>                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            <option value="">All Boards</option>
+
+                            @foreach(\App\Models\Board::all() as $board)                        </div>                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+
+                                <option value="{{ $board->id }}" {{ request('board_id') == $board->id ? 'selected' : '' }}>
+
+                                    {{ $board->board_name }}                    </div>                            </svg>
+
+                                </option>
+
+                            @endforeach                </div>                        </div>
+
+                        </select>
+
+                    </div>                        <div class="ml-3">
+
+
+
+                <!-- Card Actions -->                            <p class="text-sm font-medium text-gray-600">High Priority</p>
+
+                    <!-- Sort Filter -->
+
+                    <div>                <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">                            <p class="text-2xl font-bold text-purple-600">{{ $statistics['high_priority_cards'] }}</p>
+
+                        <label for="sort" class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+
+                        <select name="sort" id="sort"                     <div class="flex space-x-2">                        </div>
+
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                            <option value="created_at" {{ request('sort') === 'created_at' ? 'selected' : '' }}>Created Date</option>                        <a href="{{ route('cards.show', $card) }}"                     </div>
+
+                            <option value="due_date" {{ request('sort') === 'due_date' ? 'selected' : '' }}>Due Date</option>
+
+                            <option value="priority" {{ request('sort') === 'priority' ? 'selected' : '' }}>Priority</option>                           class="text-blue-600 hover:text-blue-800 text-sm font-medium">                </div>
+
+                            <option value="status" {{ request('sort') === 'status' ? 'selected' : '' }}>Status</option>
+
+                        </select>                            View
+
+                    </div>
+
+                        </a>                <!-- Assigned to Me -->
+
+                </div>
+
+                        <a href="{{ route('cards.edit', $card) }}"                 <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+
+
+
+                <!-- Action Buttons untuk clear filter dan apply filter -->                           class="text-green-600 hover:text-green-800 text-sm font-medium">                    <div class="flex items-center">
+
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+
+                    <div>                            Edit                        <div class="w-12 h-12 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-lg flex items-center justify-center">
+
+                        <a href="{{ route('cards.index') }}" 
+
+                           class="text-sm text-gray-600 hover:text-gray-800 underline">                        </a>                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            Clear All Filters
+
+                        </a>                    </div>                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+
+                    </div>
+
+                                                </svg>
+
+                    <div class="flex space-x-3">
+
+                        <button type="submit"                     <form action="{{ route('cards.destroy', $card) }}" method="POST" class="inline">                        </div>
+
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+
+                            Apply Filters                        @csrf                        <div class="ml-3">
+
+                        </button>
+
+                    </div>                        @method('DELETE')                            <p class="text-sm font-medium text-gray-600">Assigned to Me</p>
+
+                </div>
+
+                        <button type="submit"                             <p class="text-2xl font-bold text-indigo-600">{{ $statistics['assigned_to_me'] }}</p>
+
+            </form>
+
+        </div>                                onclick="return confirm('Yakin ingin menghapus card ini?')"                        </div>
+
+
+
+                                class="text-red-600 hover:text-red-800 text-sm font-medium">                    </div>
+
+
+
+                            Delete                </div>
+
+        <!-- ============================================================================ -->
+
+        <!-- CARDS GRID/LIST VIEW                                                        -->                        </button>            </div>
+
+        <!-- Layout cards dalam grid atau list view dengan pagination                     -->
+
+        <!-- ============================================================================ -->                    </form>        </div>
+
+        
+
+        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg overflow-hidden">                </div>    </div>
+
+            
+
+            <!-- Cards Header dengan informasi total dan range data -->            </div>
+
+            <div class="px-6 py-4 border-b border-gray-200/50 bg-gray-50/50">
+
+                <div class="flex items-center justify-between">        @empty
+
+                    <h3 class="text-lg font-semibold text-gray-900">
+
+                        Cards ({{ $cards->total() }} total)            <div class="col-span-full text-center py-12">    <!-- ============================================================================ -->
+
+                    </h3>
+
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">    <!-- FILTERS AND SEARCH SECTION                                                  -->
+
+                    <div class="text-sm text-gray-600">
+
+                        Showing {{ $cards->firstItem() ?? 0 }} - {{ $cards->lastItem() ?? 0 }} of {{ $cards->total() }} results                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"></path>    <!-- Advanced filtering dan search functionality seperti Jira                    -->
+
+                    </div>
+
+                </div>                </svg>    <!-- ============================================================================ -->
+
+            </div>
+
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada cards</h3>    
+
+
+
+            <!-- Cards Content dengan conditional rendering grid/list -->                <p class="mt-1 text-sm text-gray-500">Mulai dengan membuat card pertama Anda.</p>    <div class="max-w-full mx-auto px-6 py-6">
+
+            <div class="p-6">
+
+                @if($cards->count() > 0)                <div class="mt-6">        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-6 mb-6">
+
+                    
+
+                    <!-- Grid View dengan responsive columns -->                    <a href="{{ route('cards.create') }}"             <form method="GET" action="{{ route('cards.index') }}" class="space-y-4">
+
+                    <div x-show="currentView === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" x-transition>
+
+                        @foreach($cards as $card)                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">                
+
+                            
+
+                            <!-- Card Item dalam Grid Layout -->                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">                <!-- Search Input -->
+
+                            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>                <div class="flex flex-col md:flex-row gap-4">
+
+                                <!-- Card Header dengan title dan priority badge -->
+
+                                <div class="p-4 border-b border-gray-100">                        </svg>                    <div class="flex-1">
+
+                                    <div class="flex items-start justify-between mb-2">
+
+                                        <h3 class="text-lg font-semibold text-gray-900 truncate flex-1 mr-2">                        Tambah Card                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Cards</label>
+
+                                            {{ $card->card_title }}
+
+                                        </h3>                    </a>                        <div class="relative">
+
+                                        
+
+                                        <!-- Priority Badge dengan conditional styling -->                </div>                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full shrink-0
+
+                                            @if($card->priority == 'high') bg-red-100 text-red-800            </div>                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                                            @elseif($card->priority == 'medium') bg-yellow-100 text-yellow-800
+
+                                            @else bg-green-100 text-green-800 @endif">        @endforelse                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+
+                                            {{ ucfirst($card->priority) }}
+
+                                        </span>    </div>                                </svg>
+
+                                    </div>
+
+                                                                </div>
+
+                                    <!-- Status Badge dengan conditional styling -->
+
+                                    <div class="flex items-center justify-between">    <!-- Pagination -->                            <input type="text" 
+
+                                        <span class="px-3 py-1 text-sm font-medium rounded-full
+
+                                            @if($card->status == 'done') bg-green-100 text-green-800    @if($cards->hasPages())                                   name="search" 
+
+                                            @elseif($card->status == 'in progress') bg-yellow-100 text-yellow-800
+
+                                            @elseif($card->status == 'review') bg-blue-100 text-blue-800        <div class="flex justify-center">                                   id="search"
+
+                                            @else bg-gray-100 text-gray-800 @endif">
+
+                                            {{ ucfirst($card->status) }}            {{ $cards->links() }}                                   value="{{ request('search') }}"
+
+                                        </span>
+
+                                    </div>        </div>                                   placeholder="Search by title or description..."
+
+                                </div>
+
+    @endif                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+
+
+
+                                <!-- Card Body dengan description dan metadata --></div>                        </div>
+
+                                <div class="p-4">
+
+                                    @if($card->description)@endsection                    </div>
+
+                                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">                    
+
+                                            {{ $card->description }}                    <div class="flex items-end">
+
+                                        </p>                        <button type="submit" 
+
+                                    @endif                                class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+
+                                                                Search
+
+                                    <!-- Card Meta Information -->                        </button>
+
+                                    <div class="space-y-2 text-sm text-gray-500">                    </div>
+
+                                        @if($card->due_date)                </div>
+
+                                            <div class="flex items-center space-x-2">
+
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+
+                                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>                <!-- Filter Row -->
+
+                                                </svg>                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                                                <span>{{ $card->due_date->format('d M Y') }}</span>                    
+
+                                            </div>                    <!-- Status Filter -->
+
+                                        @endif                    <div>
+
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+
+                                        @if($card->creator)                        <select name="status" id="status" 
+
+                                            <div class="flex items-center space-x-2">                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">                            <option value="">All Status</option>
+
+                                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>                            <option value="todo" {{ request('status') === 'todo' ? 'selected' : '' }}>Todo</option>
+
+                                                </svg>                            <option value="in progress" {{ request('status') === 'in progress' ? 'selected' : '' }}>In Progress</option>
+
+                                                <span>{{ $card->creator->full_name ?? 'Unknown' }}</span>                            <option value="review" {{ request('status') === 'review' ? 'selected' : '' }}>Review</option>
+
+                                            </div>                            <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Done</option>
+
+                                        @endif                        </select>
+
+                                    </div>                    </div>
+
+                                </div>
+
+                    <!-- Priority Filter -->
+
+                    <div>
+
+                                <!-- Card Actions dengan view, edit, delete -->                        <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+
+                                <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">                        <select name="priority" id="priority" 
+
+                                    <div class="flex space-x-2">                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                                        <a href="{{ route('cards.show', $card) }}"                            <option value="">All Priority</option>
+
+                                           class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">                            <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
+
+                                            View                            <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Medium</option>
+
+                                        </a>                            <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>High</option>
+
+                                        <a href="{{ route('cards.edit', $card) }}"                        </select>
+
+                                           class="text-green-600 hover:text-green-800 text-sm font-medium transition-colors">                    </div>
+
+                                            Edit
+
+                                        </a>                    <!-- Assignee Filter -->
+
+                                    </div>                    <div>
+
+                        <label for="assignee" class="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
+
+                                    <form action="{{ route('cards.destroy', $card) }}" method="POST" class="inline">                        <select name="assignee" id="assignee" 
+
+                                        @csrf                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                                        @method('DELETE')                            <option value="">All Assignees</option>
+
+                                        <button type="submit"                            @foreach($filterData['users'] as $user)
+
+                                                onclick="return confirm('Yakin ingin menghapus card ini?')"                                <option value="{{ $user->id }}" {{ request('assignee') == $user->id ? 'selected' : '' }}>
+
+                                                class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors">                                    {{ $user->full_name }}
+
+                                            Delete                                </option>
+
+                                        </button>                            @endforeach
+
+                                    </form>                        </select>
+
+                                </div>                    </div>
+
+
+
+                            </div>                    <!-- Sort Filter -->
+
+                    <div>
+
+                        @endforeach                        <label for="sort" class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+
+                    </div>                        <select name="sort" id="sort" 
+
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                            <option value="created_at" {{ request('sort') === 'created_at' ? 'selected' : '' }}>Created Date</option>
+
+                    <!-- List View dengan layout horizontal -->                            <option value="due_date" {{ request('sort') === 'due_date' ? 'selected' : '' }}>Due Date</option>
+
+                    <div x-show="currentView === 'list'" class="space-y-4" x-transition>                            <option value="priority" {{ request('sort') === 'priority' ? 'selected' : '' }}>Priority</option>
+
+                        @foreach($cards as $card)                            <option value="status" {{ request('sort') === 'status' ? 'selected' : '' }}>Status</option>
+
+                                                    </select>
+
+                            <!-- Card Item dalam List Layout -->                    </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-6">                </div>
+
+                                <div class="flex items-center justify-between">
+
+                                    
+
+                                    <!-- Card Info Section -->                <!-- Action Buttons -->
+
+                                    <div class="flex-1">                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+
+                                        <div class="flex items-center space-x-4">                    <div>
+
+                                            <h3 class="text-lg font-semibold text-gray-900">{{ $card->card_title }}</h3>                        <a href="{{ route('cards.index') }}" 
+
+                                                                       class="text-sm text-gray-600 hover:text-gray-800 underline">
+
+                                            <!-- Status Badge -->                            Clear All Filters
+
+                                            <span class="px-3 py-1 text-sm font-medium rounded-full                        </a>
+
+                                                @if($card->status == 'done') bg-green-100 text-green-800                    </div>
+
+                                                @elseif($card->status == 'in progress') bg-yellow-100 text-yellow-800                    
+
+                                                @elseif($card->status == 'review') bg-blue-100 text-blue-800                    <div class="flex space-x-3">
+
+                                                @else bg-gray-100 text-gray-800 @endif">                        <button type="submit" 
+
+                                                {{ ucfirst($card->status) }}                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+
+                                            </span>                            Apply Filters
+
+                                                                    </button>
+
+                                            <!-- Priority Badge -->                    </div>
+
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full                </div>
+
+                                                @if($card->priority == 'high') bg-red-100 text-red-800            </form>
+
+                                                @elseif($card->priority == 'medium') bg-yellow-100 text-yellow-800        </div>
+
+                                                @else bg-green-100 text-green-800 @endif">
+
+                                                {{ ucfirst($card->priority) }}
+
+                                            </span>        <!-- ============================================================================ -->
+
+                                        </div>        <!-- CARDS GRID/LIST VIEW                                                        -->
+
+                                                <!-- Layout cards dalam grid atau list view dengan pagination                     -->
+
+                                        @if($card->description)        <!-- ============================================================================ -->
+
+                                            <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ $card->description }}</p>        
+
+                                        @endif        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg overflow-hidden">
+
+                                                    
+
+                                        <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">            <!-- Cards Header -->
+
+                                            @if($card->due_date)            <div class="px-6 py-4 border-b border-gray-200/50 bg-gray-50/50">
+
+                                                <span>Due: {{ $card->due_date->format('d M Y') }}</span>                <div class="flex items-center justify-between">
+
+                                            @endif                    <h3 class="text-lg font-semibold text-gray-900">
+
+                                            @if($card->creator)                        Cards ({{ $cards->total() }} total)
+
+                                                <span>Created by: {{ $card->creator->full_name ?? 'Unknown' }}</span>                    </h3>
+
+                                            @endif                    
+
+                                        </div>                    <div class="text-sm text-gray-600">
+
+                                    </div>                        Showing {{ $cards->firstItem() ?? 0 }} - {{ $cards->lastItem() ?? 0 }} of {{ $cards->total() }} results
+
+                    </div>
+
+                                                    </div>
+
+                                    <!-- Actions Section -->            </div>
+
+                                    <div class="flex items-center space-x-3 ml-4">
+
+                                        <a href="{{ route('cards.show', $card) }}"            <!-- Cards Content -->
+
+                                           class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">            <div class="p-6">
+
+                                            View                @if($cards->count() > 0)
+
+                                        </a>                    
+
+                                        <a href="{{ route('cards.edit', $card) }}"                    <!-- Grid View -->
+
+                                           class="text-green-600 hover:text-green-800 text-sm font-medium transition-colors">                    <div x-show="currentView === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" x-transition>
+
+                                            Edit                        @foreach($cards as $card)
+
+                                        </a>                            <x-cards.card-grid-item :card="$card" />
+
+                                                                @endforeach
+
+                                        <form action="{{ route('cards.destroy', $card) }}" method="POST" class="inline">                    </div>
+
+                                            @csrf
+
+                                            @method('DELETE')                    <!-- List View -->
+
+                                            <button type="submit"                    <div x-show="currentView === 'list'" class="space-y-4" x-transition>
+
+                                                    onclick="return confirm('Yakin ingin menghapus card ini?')"                        @foreach($cards as $card)
+
+                                                    class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors">                            <x-cards.card-list-item :card="$card" />
+
+                                                Delete                        @endforeach
+
+                                            </button>                    </div>
+
+                                        </form>
+
+                                    </div>                @else
+
+                                                        <!-- Empty State -->
+
+                                </div>                    <div class="text-center py-12">
+
+                            </div>                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+
+                        @endforeach                        </svg>
+
+                    </div>                        <h3 class="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
+
+                        <p class="text-gray-600 mb-6">Try adjusting your search or filter criteria.</p>
+
+                @else                        <button @click="$dispatch('create-card-modal')" 
+
+                                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+
+                    <!-- Empty State ketika tidak ada cards -->                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    <div class="text-center py-12">                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+
+                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">                            </svg>
+
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>                            Create First Card
+
+                        </svg>                        </button>
+
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No cards found</h3>                    </div>
+
+                        <p class="text-gray-600 mb-6">Try adjusting your search or filter criteria.</p>                @endif
+
+                        <a href="{{ route('cards.create') }}"             </div>
+
+                           class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">            <!-- Pagination -->
+
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>            @if($cards->hasPages())
+
+                            </svg>                <div class="px-6 py-4 border-t border-gray-200/50 bg-gray-50/50">
+
+                            Create First Card                    {{ $cards->links() }}
+
+                        </a>                </div>
+
+                    </div>            @endif
+
+        </div>
+
+                @endif    </div>
+
+            </div>
+
+
+
+    <!-- ============================================================================ -->
+
+            <!-- Pagination dengan Laravel links -->    <!-- MODALS SECTION                                                               -->
+
+            @if($cards->hasPages())    <!-- Card detail modal dengan subtasks todolist dan comments                     -->
+
+                <div class="px-6 py-4 border-t border-gray-200/50 bg-gray-50/50">    <!-- ============================================================================ -->
+
+                    {{ $cards->appends(request()->query())->links() }}    
+
+                </div>    <x-cards.card-detail-modal />
+
+            @endif    <x-cards.create-card-modal :filterData="$filterData" />
+
+    <x-cards.edit-card-modal />
+
+        </div>
+
+    </div></div>
+
+
+
+</div>
+
+<!-- ============================================================================ -->
+
+<!-- JAVASCRIPT SECTION                                                          -->
+
+<!-- Alpine.js component untuk managing state dan interactions                   -->
+
+<!-- ============================================================================ -->
+
+<!-- ============================================================================ -->
+
+<!-- JAVASCRIPT SECTION                                                          -->@push('scripts')
+
+<!-- Alpine.js component untuk managing state dan interactions                   --><script>
+
+<!-- ============================================================================ -->/**
+
+ * Cards Page Data Component
+
+@push('scripts') * 
+
+<script> * Manages the state and interactions for the cards page including:
+
+/** * - View switching (grid/list)
+
+ * Cards Page Data Component * - Modal management
+
+ *  * - Filter state management
+
+ * Manages the state and interactions for the cards page including: * - Card interactions
+
+ * - View switching (grid/list) */
+
+ * - Modal management function cardsPageData() {
+
+ * - Filter state management    return {
+
+ * - Card interactions        // View management
+
+ */        currentView: 'grid',
+
+function cardsPageData() {        
+
+    return {        // Modal states
+
+        // View management state        selectedCard: null,
+
+        currentView: 'grid',        editingCard: null,
+
+                showCreateModal: false,
+
+        // Modal states untuk future modal implementations
+
+        selectedCard: null,
+
+        editingCard: null,        /**
+
+        showCreateModal: false,         * Initialize component
+
+         */
+
+        init() {
+
+        /**            // Load view preference from localStorage
+
+         * Initialize component dan load preferences            this.currentView = localStorage.getItem('cardsView') || 'grid';
+
+         */            
+
+        init() {            // Setup event listeners
+
+            // Load view preference from localStorage            this.setupEventListeners();
+
+            this.currentView = localStorage.getItem('cardsView') || 'grid';        },
+
+        },
+
+
+
+        /**
+
+        /**         * Toggle between grid and list view
+
+         * Toggle between grid and list view dengan localStorage persistence         */
+
+         */        toggleView() {
+
+        toggleView() {            this.currentView = this.currentView === 'grid' ? 'list' : 'grid';
+
+            this.currentView = this.currentView === 'grid' ? 'list' : 'grid';            localStorage.setItem('cardsView', this.currentView);
+
+            localStorage.setItem('cardsView', this.currentView);        },
+
+        },
+
+
+
+        /**
+
+        /**         * Setup event listeners for modals and interactions
+
+         * Close all modals - untuk future modal implementations         */
+
+         */        setupEventListeners() {
+
+        closeModals() {            // Listen for card detail modal events
+
+            this.selectedCard = null;            document.addEventListener('show-card-detail', (e) => {
+
+            this.editingCard = null;                this.selectedCard = e.detail;
+
+            this.showCreateModal = false;            });
+
+        },
+
+            // Listen for edit card modal events  
+
+            document.addEventListener('show-edit-card', (e) => {
+
+        /**                this.editingCard = e.detail;
+
+         * Refresh page data - utility function            });
+
+         */
+
+        refreshPage() {            // Listen for create card modal events
+
+            window.location.reload();            document.addEventListener('create-card-modal', () => {
+
+        }                this.showCreateModal = true;
+
+            });
+
+    }        },
+
+}
+
+</script>
+
+@endpush        /**
+
+         * Close all modals
+
+@endsection         */
+        closeModals() {
+            this.selectedCard = null;
+            this.editingCard = null;
+            this.showCreateModal = false;
+        },
+
+
+        /**
+         * Refresh page data
+         */
+        refreshPage() {
+            window.location.reload();
+        }
+    }
+}
+
+
+/**
+ * Initialize Alpine.js stores for global state management
+ */
+document.addEventListener('alpine:init', () => {
+    Alpine.store('cardModal', {
+        // Modal visibility states
+        detail: false,
+        edit: false,
+        create: false,
+        
+        // Selected card data
+        selectedCard: null,
+        
+        // Open specific modal
+        open(modalType, cardData = null) {
+            this.closeAll();
+            this[modalType] = true;
+            if (cardData) {
+                this.selectedCard = cardData;
+            }
+        },
+        
+        // Close all modals
+        closeAll() {
+            this.detail = false;
+            this.edit = false;
+            this.create = false;
+            this.selectedCard = null;
+        }
+    });
+});
+</script>
+@endpush
+
+@endsection

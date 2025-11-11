@@ -1,0 +1,533 @@
+<?php
+
+namespace App\Http\Controllers\web;
+
+use App\Http\Controllers\Controller;
+use App\Models\Board;
+use App\Models\Card;
+use App\Models\CardAssignment;
+use App\Models\Project;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
+class CardController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     * 
+     * Menampilkan halaman cards dengan layout Jira-like yang mencakup:
+     * - Grid cards dengan filter dan search
+     * - Statistics dashboard dan analytics
+     * - Eager loading untuk performance
+     * - Role-based authorization
+     */
+    public function index(Request $request)
+    {
+        try {
+            // Build query dengan eager loading untuk performance
+            $cardsQuery = Card::with([
+                'board.project',
+                'creator:id,full_name,email,username',
+                'assignments.user:id,full_name,email,username', 
+                'subtasks' => function($query) {
+                    $query->orderBy('position')->orderBy('created_at');
+                },
+                'comments.user:id,full_name,email,username'
+            ]);
+
+
+            // Apply filters berdasarkan request parameters
+            if ($request->filled('status')) {
+                $cardsQuery->where('status', $request->status);
+            }
+
+            if ($request->filled('priority')) {
+                $cardsQuery->where('priority', $request->priority);
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $cardsQuery->where(function($query) use ($search) {
+                    $query->where('card_title', 'LIKE', "%{$search}%")
+                          ->orWhere('description', 'LIKE', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('assignee')) {
+                $cardsQuery->whereHas('assignments', function($query) use ($request) {
+                    $query->where('user_id', $request->assignee);
+                });
+            }
+
+
+            // Filter berdasarkan project yang user miliki akses
+            $userProjectIds = Auth::user()->projectMemberships()
+                ->pluck('project_id')
+                ->merge([
+                    Auth::user()->createdProjects()->pluck('id')
+                ])->unique();
+
+            $cardsQuery->whereHas('board.project', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            });
+
+
+            // Pagination dengan sort order
+            $sortBy = $request->get('sort', 'created_at');
+            $sortOrder = $request->get('order', 'desc');
+            
+            $cards = $cardsQuery->orderBy($sortBy, $sortOrder)->paginate(12);
+
+
+            // Hitung statistics untuk dashboard
+            $allUserCards = Card::whereHas('board.project', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->get();
+
+            $statistics = [
+                'total_cards' => $allUserCards->count(),
+                'todo_cards' => $allUserCards->where('status', 'todo')->count(),
+                'in_progress_cards' => $allUserCards->where('status', 'in progress')->count(),
+                'review_cards' => $allUserCards->where('status', 'review')->count(),
+                'done_cards' => $allUserCards->where('status', 'done')->count(),
+                'overdue_cards' => $allUserCards->filter(function($card) {
+                    return $card->due_date && $card->due_date->isPast() && $card->status !== 'done';
+                })->count(),
+                'high_priority_cards' => $allUserCards->where('priority', 'high')->count(),
+                'assigned_to_me' => $allUserCards->filter(function($card) {
+                    return $card->assignments->contains('user_id', Auth::id());
+                })->count(),
+            ];
+
+
+            // Data untuk dropdown filters
+            $filterData = [
+                'users' => User::whereHas('projectMemberships', function($query) use ($userProjectIds) {
+                    $query->whereIn('project_id', $userProjectIds);
+                })->orWhereHas('createdProjects', function($query) use ($userProjectIds) {
+                    $query->whereIn('id', $userProjectIds);
+                })->get(['id', 'full_name', 'email']),
+                
+                'boards' => Board::whereHas('project', function($query) use ($userProjectIds) {
+                    $query->whereIn('id', $userProjectIds);
+                })->with('project:id,project_name')->get(['id', 'project_id', 'board_name']),
+            ];
+
+
+            return view('cards.index', compact(
+                'cards', 
+                'statistics', 
+                'filterData'
+            ));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memuat halaman cards: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        try {
+            // Get user's accessible projects
+            $userProjectIds = Auth::user()->projectMemberships()
+                ->pluck('project_id')
+                ->merge([
+                    Auth::user()->createdProjects()->pluck('id')
+                ])->unique();
+
+            // Get boards from accessible projects
+            $boards = Board::whereHas('project', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->with('project:id,project_name')->get();
+
+            // Get users from accessible projects for assignment
+            $users = User::whereHas('projectMemberships', function($query) use ($userProjectIds) {
+                $query->whereIn('project_id', $userProjectIds);
+            })->orWhereHas('createdProjects', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->get(['id', 'full_name', 'email', 'username']);
+
+            return view('cards.create', compact('boards', 'users'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memuat halaman create card: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     * Membuat card baru dengan assignment ke users
+     */
+    public function store(Request $request)
+    {
+        try {
+            // Validation
+            $request->validate([
+                'board_id' => 'required|exists:boards,id',
+                'card_title' => 'required|string|max:255',
+                'description' => 'nullable|string|max:1000',
+                'status' => 'required|in:todo,in progress,review,done',
+                'priority' => 'required|in:low,medium,high',
+                'due_date' => 'nullable|date|after_or_equal:today',
+                'estimated_hours' => 'nullable|numeric|min:0|max:999.99',
+                'assigned_users' => 'nullable|array',
+                'assigned_users.*' => 'exists:users,id'
+            ]);
+
+            DB::transaction(function () use ($request) {
+                // Get board and check authorization
+                $board = Board::with('project.members')->findOrFail($request->board_id);
+                
+                // Check if user is member or creator of project
+                $isMember = $board->project->members->contains('user_id', Auth::id());
+                $isCreator = $board->project->created_by === Auth::id();
+                
+                if (!$isMember && !$isCreator) {
+                    abort(403, 'Anda tidak memiliki akses untuk menambah card di board ini.');
+                }
+
+                // Get next position
+                $nextPosition = Card::where('board_id', $request->board_id)->max('position') + 1;
+
+                // Create card
+                $card = Card::create([
+                    'board_id' => $request->board_id,
+                    'card_title' => $request->card_title,
+                    'description' => $request->description,
+                    'status' => $request->status,
+                    'priority' => $request->priority,
+                    'due_date' => $request->due_date,
+                    'estimated_hours' => $request->estimated_hours,
+                    'actual_hours' => 0,
+                    'position' => $nextPosition,
+                    'created_by' => Auth::id()
+                ]);
+
+                // Create assignments if provided
+                if ($request->assigned_users) {
+                    foreach ($request->assigned_users as $userId) {
+                        // Verify user is member of project
+                        $isProjectMember = $board->project->members->contains('user_id', $userId);
+                        if ($isProjectMember || $board->project->created_by == $userId) {
+                            CardAssignment::create([
+                                'card_id' => $card->id,
+                                'user_id' => $userId,
+                                'role' => 'assigned',
+                                'assigned_by' => Auth::id()
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            return redirect()->route('cards.index')->with('success', 'Card berhasil dibuat');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal membuat card: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Card $card)
+    {
+        try {
+            $card->load([
+                'creator:id,full_name,email,username', 
+                'board.project', 
+                'assignments.user:id,full_name,email,username', 
+                'comments.user:id,full_name,email,username', 
+                'subtasks' => function($query) {
+                    $query->orderBy('position')->orderBy('created_at');
+                }
+            ]);
+            
+            // Check authorization
+            $project = $card->board->project;
+            $isMember = $project->members->contains('user_id', Auth::id());
+            $isCreator = $project->created_by === Auth::id();
+            
+            if (!$isMember && !$isCreator) {
+                abort(403, 'Anda tidak memiliki akses ke card ini.');
+            }
+
+            return view('cards.show', compact('card'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memuat card: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Card $card)
+    {
+        try {
+            $card->load(['creator', 'board.project.members', 'assignments.user']);
+            
+            // Check authorization
+            $project = $card->board->project;
+            $isMember = $project->members->contains('user_id', Auth::id());
+            $isCreator = $project->created_by === Auth::id();
+            $isAssigned = $card->assignments->contains('user_id', Auth::id());
+            
+            if (!$isMember && !$isCreator && !$isAssigned) {
+                abort(403, 'Anda tidak memiliki akses untuk mengedit card ini.');
+            }
+
+            // Get user's accessible projects for board selection
+            $userProjectIds = Auth::user()->projectMemberships()
+                ->pluck('project_id')
+                ->merge([
+                    Auth::user()->createdProjects()->pluck('id')
+                ])->unique();
+
+            // Get boards from accessible projects
+            $boards = Board::whereHas('project', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->with('project:id,project_name')->get();
+
+            // Get users from accessible projects for assignment
+            $users = User::whereHas('projectMemberships', function($query) use ($userProjectIds) {
+                $query->whereIn('project_id', $userProjectIds);
+            })->orWhereHas('createdProjects', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->get(['id', 'full_name', 'email', 'username']);
+
+            return view('cards.edit', compact('card', 'boards', 'users'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memuat halaman edit card: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Card $card)
+    {
+        try {
+            $card->load(['creator', 'board.project.members', 'assignments.user']);
+            
+            // Check authorization
+            $project = $card->board->project;
+            $isMember = $project->members->contains('user_id', Auth::id());
+            $isCreator = $project->created_by === Auth::id();
+            $isAssigned = $card->assignments->contains('user_id', Auth::id());
+            
+            if (!$isMember && !$isCreator && !$isAssigned) {
+                abort(403, 'Anda tidak memiliki akses untuk mengedit card ini.');
+            }
+
+            // Get boards and users for dropdowns
+            $userProjectIds = Auth::user()->projectMemberships()
+                ->pluck('project_id')
+                ->merge([Auth::user()->createdProjects()->pluck('id')])
+                ->unique();
+
+            $boards = Board::whereHas('project', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->with('project:id,project_name')->get();
+
+            $users = User::whereHas('projectMemberships', function($query) use ($userProjectIds) {
+                $query->whereIn('project_id', $userProjectIds);
+            })->orWhereHas('createdProjects', function($query) use ($userProjectIds) {
+                $query->whereIn('id', $userProjectIds);
+            })->get(['id', 'full_name', 'email', 'username']);
+
+            return view('cards.edit', compact('card', 'boards', 'users'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memuat halaman edit card: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     * Mengupdate card termasuk status transition
+     */
+    public function update(Request $request, Card $card)
+    {
+        try {
+            // Load relationships
+            $card->load(['board.project.members', 'assignments']);
+            
+            // Check authorization
+            $project = $card->board->project;
+            $isMember = $project->members->contains('user_id', Auth::id());
+            $isCreator = $project->created_by === Auth::id();
+            $isAssigned = $card->assignments->contains('user_id', Auth::id());
+            
+            if (!$isMember && !$isCreator && !$isAssigned) {
+                abort(403, 'Tidak memiliki akses untuk mengupdate card ini');
+            }
+
+            // Validation
+            $request->validate([
+                'card_title' => 'required|string|max:255',
+                'description' => 'nullable|string|max:1000',
+                'status' => 'required|in:todo,in progress,review,done',
+                'priority' => 'required|in:low,medium,high',
+                'due_date' => 'nullable|date',
+                'estimated_hours' => 'nullable|numeric|min:0|max:999.99',
+                'actual_hours' => 'nullable|numeric|min:0|max:999.99',
+                'assigned_users' => 'nullable|array',
+                'assigned_users.*' => 'exists:users,id'
+            ]);
+
+            DB::transaction(function () use ($request, $card) {
+                $card->update($request->only([
+                    'card_title', 'description', 'status', 'priority', 
+                    'due_date', 'estimated_hours', 'actual_hours'
+                ]));
+
+                // Update assignments if provided
+                if ($request->has('assigned_users')) {
+                    $card->assignments()->delete();
+                    
+                    if ($request->assigned_users) {
+                        foreach ($request->assigned_users as $userId) {
+                            CardAssignment::create([
+                                'card_id' => $card->id,
+                                'user_id' => $userId,
+                                'role' => 'assigned',
+                                'assigned_by' => Auth::id()
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            return redirect()->route('cards.show', $card)->with('success', 'Card berhasil diupdate');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal mengupdate card: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update card status
+     * Khusus untuk status transition dengan role checking
+     */
+    public function updateStatus(Request $request, Card $card)
+    {
+        try {
+            // Load relationships
+            $card->load(['board.project.members', 'assignments']);
+            
+            // Check authorization and role
+            $project = $card->board->project;
+            $projectMember = $project->members->where('user_id', Auth::id())->first();
+            $userRole = $projectMember?->role ?? 'member';
+            $isCreator = $project->created_by === Auth::id();
+            $isAssigned = $card->assignments->contains('user_id', Auth::id());
+
+            // Validation
+            $request->validate([
+                'status' => 'required|in:todo,in progress,review,done'
+            ]);
+
+            $newStatus = $request->status;
+            $currentStatus = $card->status;
+
+            // Role-based status transition rules
+            if ($newStatus === 'in progress' && $currentStatus === 'todo') {
+                // Start task: assigned user or team lead
+                if (!$isAssigned && $userRole !== 'team lead' && !$isCreator) {
+                    return response()->json(['message' => 'Hanya assigned user atau team lead yang bisa memulai task'], 403);
+                }
+            }
+
+            if ($newStatus === 'review' && $currentStatus === 'in progress') {
+                // Submit for review: assigned user or team lead
+                if (!$isAssigned && $userRole !== 'team lead' && !$isCreator) {
+                    return response()->json(['message' => 'Hanya assigned user atau team lead yang bisa submit untuk review'], 403);
+                }
+            }
+
+            if ($newStatus === 'done' && $currentStatus === 'review') {
+                // Approve: only team lead or creator
+                if ($userRole !== 'team lead' && !$isCreator) {
+                    return response()->json(['message' => 'Hanya team lead yang bisa approve task'], 403);
+                }
+            }
+
+            if ($newStatus === 'in progress' && $currentStatus === 'review') {
+                // Request changes: only team lead or creator
+                if ($userRole !== 'team lead' && !$isCreator) {
+                    return response()->json(['message' => 'Hanya team lead yang bisa request changes'], 403);
+                }
+            }
+
+            DB::transaction(function () use ($card, $newStatus) {
+                $card->update(['status' => $newStatus]);
+            });
+
+            return response()->json([
+                'message' => 'Status card berhasil diupdate',
+                'success' => true
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengupdate status: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Card $card)
+    {
+        try {
+            // Load relationships
+            $card->load(['board.project.members']);
+            
+            // Check authorization - only creator or team lead can delete
+            $project = $card->board->project;
+            $projectMember = $project->members->where('user_id', Auth::id())->first();
+            $userRole = $projectMember?->role ?? 'member';
+            $isCreator = $project->created_by === Auth::id();
+            $isCardCreator = $card->created_by === Auth::id();
+
+            if (!$isCreator && $userRole !== 'team lead' && !$isCardCreator) {
+                return response()->json(['message' => 'Tidak memiliki akses untuk menghapus card ini'], 403);
+            }
+
+            DB::transaction(function () use ($card) {
+                // Delete related records
+                $card->assignments()->delete();
+                $card->comments()->delete();
+                $card->subtasks()->delete();
+                
+                // Delete card
+                $card->delete();
+            });
+
+            return response()->json([
+                'message' => 'Card berhasil dihapus',
+                'success' => true
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal menghapus card: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
+        }
+    }
+}

@@ -16,18 +16,23 @@ class AuthenticationController extends Controller
     public function login(Request $request)
     { 
         $rules = [
-            'email' => 'required|email',
+            'email' => 'required',
             'password' => 'required'
         ];
 
         $validatedData = $request->validate($rules, [
-            'email.required' => 'Email tolong diisi peler',
-            'email.email' => 'Email is not valid',
+            'email.required' => 'Email atau username tolong diisi',
             'password.required' => 'Password is required'
         ]);
 
+        // Support login with email or username
+        $loginField = filter_var($validatedData['email'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = [
+            $loginField => $validatedData['email'],
+            'password' => $validatedData['password']
+        ];
 
-        if (Auth::attempt($validatedData)) {
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate(); 
             return redirect()->intended('/dashboard'); 
         }

@@ -222,5 +222,11 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- Toast Notifications Component -->
+    <x-toast-notifications />
+
+    <!-- Additional Scripts -->
+    @stack('scripts')
 </body>
 </html>

@@ -22,7 +22,7 @@ class CardResource extends JsonResource
             'title' => $this->card_title,
             'description' => $this->description,
             'status' => $this->status,
-            'created_by' => $this->user->username,
+            'created_by' => $this->creator->username,
             'created_at' => $this->created_at,
             'actual_hours' => $this->actual_hours,
             'deadline' => $this->due_date,

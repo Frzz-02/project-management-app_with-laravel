@@ -13,11 +13,43 @@ class CardController extends Controller
      */
     public function index()
     {
-        return response()->json([
-            'title' => 'card assignment project',
-            'data' => CardResource::collection(\App\Models\Card::with('user')->get()),
-            // 'message' => 'Card index'
-        ]);
+        // Ambil user ID yang sedang login dari token authentication
+    $userId = auth()->user()->id;
+
+
+    // Query cards dengan 2 kondisi:
+    // 1. Cards yang dibuat oleh user (created_by)
+    // 2. Cards yang ditugaskan ke user (via card_assignments relationship)
+    $cards = \App\Models\Card::with([
+            'creator',           // Eager load creator untuk menghindari N+1
+            'board.project',     // Eager load board dan project
+            'assignments.user',  // Eager load assignments dengan user data
+            'subtasks',          // Eager load subtasks
+            'comments'           // Eager load comments
+        ])
+        ->where(function($query) use ($userId) {
+            // Cards yang dibuat oleh user
+            $query->whereHas('assignments', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+                  // ATAU cards yang ditugaskan ke user via card_assignments
+                //   ->orWhereHas('assignments', function($q) use ($userId) {
+                //       $q->where('user_id', $userId);
+                //   });
+        })
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+
+    return response()->json([
+        'title' => 'My Cards',
+        // 'data' => CardResource::collection($cards),
+        'data' => $cards,
+        'meta' => [
+            'total' => $cards->count(),
+            'user_id' => $userId
+        ]
+    ]);
     }
 
     /**
@@ -31,7 +63,6 @@ class CardController extends Controller
             'priority' => 'required|in:low,medium,high',
             'card_title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:todo,in_progress,done',
             'created_by' => 'required|exists:users,id',
             'due_date' => 'nullable|date',
             'estimated_hours' => 'nullable|integer',

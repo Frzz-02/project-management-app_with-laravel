@@ -56,21 +56,51 @@ class BoardPolicy
     /**
      * Determine whether the user can update the model.
      * 
-     * Update board - hanya admin
+     * Update board:
+     * - Admin bisa update semua board
+     * - Team lead dari project yang bersangkutan bisa update board
      */
     public function update(User $user, Board $board): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa update semua board
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Team lead dari project bisa update board
+        if ($board->project->members->contains('user_id', $user->id)) {
+            $projectMember = $user->projectMemberships->firstWhere('project_id', $board->project_id);
+            if ($projectMember && $projectMember->role === 'team lead') {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
      * Determine whether the user can delete the model.
      * 
-     * Hapus board - hanya admin
+     * Hapus board:
+     * - Admin bisa hapus semua board
+     * - Team lead dari project yang bersangkutan bisa hapus board
      */
     public function delete(User $user, Board $board): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa hapus semua board
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Team lead dari project bisa hapus board
+        if ($board->project->members->contains('user_id', $user->id)) {
+            $projectMember = $user->projectMemberships->firstWhere('project_id', $board->project_id);
+            if ($projectMember && $projectMember->role === 'team lead') {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**

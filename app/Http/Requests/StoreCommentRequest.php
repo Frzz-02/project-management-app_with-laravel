@@ -23,11 +23,9 @@ class StoreCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'card_id' => 'nullable|exists:cards,id',
-            'subtask_id' => 'required|exists:subtasks,id',
-            'user_id' => 'required|exists:users,id',
-            'comment_text' => 'required|string',
-            'comment_type' => 'required|in:card,subtask',
+            'card_id' => 'required_without:subtask_id|exists:cards,id',
+            'subtask_id' => 'required_without:card_id|exists:subtasks,id',
+            'content' => 'required|string|max:2000',
         ];
     }
 
@@ -39,19 +37,15 @@ class StoreCommentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'card_id.exists' => 'Kartu yang dipilih tidak valid.',
+            'card_id.required_without' => 'Card ID is required when subtask ID is not provided.',
+            'card_id.exists' => 'The selected card is invalid.',
             
-            'subtask_id.required' => 'Subtask wajib dipilih.',
-            'subtask_id.exists' => 'Subtask yang dipilih tidak valid.',
+            'subtask_id.required_without' => 'Subtask ID is required when card ID is not provided.',
+            'subtask_id.exists' => 'The selected subtask is invalid.',
             
-            'user_id.required' => 'Pengguna wajib dipilih.',
-            'user_id.exists' => 'Pengguna yang dipilih tidak valid.',
-            
-            'comment_text.required' => 'Teks komentar wajib diisi.',
-            'comment_text.string' => 'Teks komentar harus berupa teks.',
-            
-            'comment_type.required' => 'Tipe komentar wajib dipilih.',
-            'comment_type.in' => 'Tipe komentar harus salah satu dari: Card atau Subtask.',
+            'content.required' => 'Comment content is required.',
+            'content.string' => 'Comment content must be a string.',
+            'content.max' => 'Comment content must not exceed 2000 characters.',
         ];
     }
 
@@ -63,11 +57,9 @@ class StoreCommentRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'card_id' => 'kartu',
+            'card_id' => 'card',
             'subtask_id' => 'subtask',
-            'user_id' => 'pengguna',
-            'comment_text' => 'teks komentar',
-            'comment_type' => 'tipe komentar',
+            'content' => 'comment content',
         ];
     }
 }

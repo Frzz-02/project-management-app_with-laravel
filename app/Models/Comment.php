@@ -6,27 +6,33 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
+
 /**
+ * ====================================================================================================
  * Comment Model
+ * ====================================================================================================
  * 
  * Model ini merepresentasikan tabel 'comments' dan mengelola:
  * - Komentar pada card atau subtask
  * - Tipe komentar (card/subtask)
  * - Relasi dengan Card, Subtask, dan User
+ * 
+ * ====================================================================================================
+ * ====================================================================================================
  */
 class Comment extends Model
 {
     use HasFactory;
+
+
 
     /**
      * Nama tabel yang digunakan oleh model ini
      */
     protected $table = 'comments';
 
-    /**
-     * Model ini tidak menggunakan updated_at (hanya created_at)
-     */
-    public $timestamps = false;
+
 
     /**
      * Field yang boleh diisi secara mass assignment
@@ -39,6 +45,8 @@ class Comment extends Model
         'comment_type',  // Tipe: card atau subtask
     ];
 
+
+
     /**
      * Field yang akan otomatis di-cast ke tipe data tertentu
      */
@@ -46,11 +54,15 @@ class Comment extends Model
         'created_at' => 'datetime',
     ];
 
+
+
     /**
-     * ====================================
+     * ====================================================================================================
      * RELATIONSHIPS (RELASI ANTAR MODEL)
-     * ====================================
+     * ====================================================================================================
      */
+
+
 
     /**
      * Relasi ke Card (Many to One) - nullable
@@ -63,6 +75,8 @@ class Comment extends Model
         return $this->belongsTo(Card::class, 'card_id', 'id');
     }
 
+
+
     /**
      * Relasi ke Subtask (Many to One)
      * 
@@ -74,6 +88,8 @@ class Comment extends Model
         return $this->belongsTo(Subtask::class, 'subtask_id', 'id');
     }
 
+
+
     /**
      * Relasi ke User yang membuat comment (Many to One)
      * 
@@ -84,11 +100,15 @@ class Comment extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+
+
     /**
-     * ====================================
+     * ====================================================================================================
      * SCOPES (QUERY BUILDER HELPERS)
-     * ====================================
+     * ====================================================================================================
      */
+
+
 
     /**
      * Scope untuk comment pada card
@@ -100,6 +120,8 @@ class Comment extends Model
         return $query->where('comment_type', 'card');
     }
 
+
+
     /**
      * Scope untuk comment pada subtask
      * 
@@ -110,11 +132,15 @@ class Comment extends Model
         return $query->where('comment_type', 'subtask');
     }
 
+
+
     /**
-     * ====================================
+     * ====================================================================================================
      * HELPER METHODS
-     * ====================================
+     * ====================================================================================================
      */
+
+
 
     /**
      * Cek apakah comment untuk card
@@ -123,6 +149,8 @@ class Comment extends Model
     {
         return $this->comment_type === 'card';
     }
+
+
 
     /**
      * Cek apakah comment untuk subtask
