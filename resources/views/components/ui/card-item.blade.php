@@ -319,20 +319,63 @@
 
         {{-- Approve/Request Changes: Only for Team Lead on Review status --}}
         @if($card->status === 'review' && $userRole === 'team lead')
-            <div class="flex space-x-2">
-                <button @click.stop="updateCardStatus({{ $card->id }}, 'done')"
-                        class="flex-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            <div class="flex space-x-2" 
+                 x-data="{
+                     isReviewing: false,
+                     async handleQuickReview(cardId, status) {
+                         if (this.isReviewing) return;
+                         
+                         const confirmMessage = status === 'approved' 
+                             ? 'Approve card ini? Status akan diubah ke Done dan assignments akan di-complete.'
+                             : 'Request perubahan? Card akan dikembalikan ke Todo.';
+                         
+                         if (!confirm(confirmMessage)) return;
+                         
+                         this.isReviewing = true;
+                         
+                         try {
+                             const formData = new FormData();
+                             formData.append('_token', document.querySelector('meta[name=\"csrf-token\"]').content);
+                             formData.append('status', status);
+                             
+                             const response = await fetch(`/cards/${cardId}/reviews`, {
+                                 method: 'POST',
+                                 body: formData,
+                                 headers: { 'Accept': 'application/json' }
+                             });
+                             
+                             const result = await response.json();
+                             
+                             if (response.ok && result.success) {
+                                 alert(result.message);
+                                 window.location.reload();
+                             } else {
+                                 alert(result.message || 'Gagal memproses review');
+                             }
+                         } catch (error) {
+                             console.error('Error:', error);
+                             alert('Terjadi kesalahan saat memproses review');
+                         } finally {
+                             this.isReviewing = false;
+                         }
+                     }
+                 }"
+                 @click.stop>
+                <button @click="handleQuickReview({{ $card->id }}, 'approved')"
+                        :disabled="isReviewing"
+                        class="flex-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    Approve
+                    <span x-text="isReviewing ? 'Processing...' : 'Approve'"></span>
                 </button>
-                <button @click.stop="updateCardStatus({{ $card->id }}, 'in progress')"
-                        class="flex-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <button @click="handleQuickReview({{ $card->id }}, 'rejected')"
+                        :disabled="isReviewing"
+                        class="flex-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
-                    Request Changes
+                    <span x-text="isReviewing ? 'Processing...' : 'Request Changes'"></span>
                 </button>
             </div>
         @endif

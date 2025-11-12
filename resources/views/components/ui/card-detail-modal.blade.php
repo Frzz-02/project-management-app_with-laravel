@@ -499,6 +499,70 @@
                         </template>
                         
                         
+                        <!-- Card Review Actions - ONLY FOR TEAM LEAD OR ADMIN -->
+                        @php
+                            $currentUserMember = $board->project->members->where('user_id', Auth::id())->first();
+                            $isTeamLeadReviewer = Auth::user()->role === 'admin' || ($currentUserMember && $currentUserMember->role === 'team lead');
+                        @endphp
+                        
+                        @if($isTeamLeadReviewer)
+                        <div x-show="selectedCard?.status === 'review'" class="space-y-3">
+                            <h4 class="text-sm font-medium text-gray-700 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Review Card
+                            </h4>
+                            
+                            <!-- Notes Input (Optional) -->
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-2">Notes (Optional)</label>
+                                <textarea x-model="reviewNotes" 
+                                          placeholder="Keterangan untuk developer (opsional)..."
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                          rows="3"></textarea>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <span x-text="reviewNotes.length"></span>/2000 karakter
+                                </p>
+                            </div>
+                            
+                            <!-- Review Buttons -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <!-- Approve Button -->
+                                <button @click="handleReview('approved')"
+                                        :disabled="isReviewing"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <svg x-show="!isReviewing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <svg x-show="isReviewing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span x-text="isReviewing ? 'Processing...' : 'Approve'"></span>
+                                </button>
+                                
+                                <!-- Request Change Button -->
+                                <button @click="handleReview('rejected')"
+                                        :disabled="isReviewing"
+                                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <svg x-show="!isReviewing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    <svg x-show="isReviewing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span x-text="isReviewing ? 'Processing...' : 'Request Change'"></span>
+                                </button>
+                            </div>
+                            
+                            <p class="text-xs text-gray-500 text-center">
+                                💡 Tip: Provide notes to help developers understand your feedback
+                            </p>
+                        </div>
+                        @endif
+                        
                         <!-- Actions - Authorization via Policy -->
                         @can('update', $board->cards->first())
                         <div class="space-y-2">
@@ -618,6 +682,10 @@ function cardDetailData() {
         selectedUsers: [],
         hasChanges: false,
         assignLoading: false,
+        
+        // Review data
+        reviewNotes: '',
+        isReviewing: false,
 
         init() {
             console.log('✅ cardDetailData() initialized');
@@ -880,6 +948,83 @@ function cardDetailData() {
                 alert(error.message || 'Gagal assign members. Silakan coba lagi.');
             } finally {
                 this.assignLoading = false;
+            }
+        },
+
+        /**
+         * Handle Card Review (Approve/Reject)
+         * 
+         * @param {string} status - 'approved' atau 'rejected'
+         */
+        async handleReview(status) {
+            if (this.isReviewing) return;
+            
+            // Validation
+            if (!this.selectedCard?.id) {
+                alert('Card tidak ditemukan');
+                return;
+            }
+            
+            // Confirm action
+            const confirmMessage = status === 'approved' 
+                ? 'Apakah Anda yakin ingin approve card ini?\n\nCard akan dipindahkan ke status "Done" dan semua assignments akan di-mark sebagai completed.'
+                : 'Apakah Anda yakin ingin request perubahan?\n\nCard akan dikembalikan ke status "Todo" untuk dikerjakan ulang.';
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            this.isReviewing = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+                formData.append('status', status);
+                
+                if (this.reviewNotes.trim()) {
+                    formData.append('notes', this.reviewNotes.trim());
+                }
+                
+                const response = await fetch(`/cards/${this.selectedCard.id}/reviews`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Success notification
+                    alert(result.message || (status === 'approved' ? 'Card berhasil di-approve!' : 'Perubahan diminta!'));
+                    
+                    // Reset review notes
+                    this.reviewNotes = '';
+                    
+                    // Close modal and reload page to reflect changes
+                    this.$store.modal.close();
+                    
+                    // Dispatch event untuk update UI
+                    document.dispatchEvent(new CustomEvent('card-reviewed', {
+                        detail: {
+                            cardId: this.selectedCard.id,
+                            status: status,
+                            newCardStatus: result.card.status
+                        }
+                    }));
+                    
+                    // Reload page to see updated card
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Gagal memproses review. Silakan coba lagi.');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error reviewing card:', error);
+                alert('Terjadi kesalahan saat memproses review. Silakan coba lagi.');
+            } finally {
+                this.isReviewing = false;
             }
         },
 
