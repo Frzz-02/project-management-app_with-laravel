@@ -187,14 +187,6 @@
                                     {{ $cardsByStatus->get('todo', collect())->count() }}
                                 </span>
                             </div>
-                            <button 
-                                @click="$dispatch('add-card-modal', { status: 'todo' })"
-                                class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                            </button>
                         </div>
                     </div>
 
@@ -232,14 +224,7 @@
                                     {{ $cardsByStatus->get('in progress', collect())->count() }}
                                 </span>
                             </div>
-                            <button 
-                                @click="$dispatch('add-card-modal', { status: 'in progress' })"
-                                class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                            </button>
+                            
                         </div>
                     </div>
 
@@ -277,14 +262,6 @@
                                     {{ $cardsByStatus->get('review', collect())->count() }}
                                 </span>
                             </div>
-                            <button 
-                                @click="$dispatch('add-card-modal', { status: 'review' })"
-                                class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                            </button>
                         </div>
                     </div>
 
