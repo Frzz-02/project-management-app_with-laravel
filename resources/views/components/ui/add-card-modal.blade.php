@@ -4,15 +4,28 @@
     // Ambil boards dari projects yang accessible oleh user
     if (!$boards) {
         $userId = Auth::id();
-        $boards = \App\Models\Board::with('project')
-            ->whereHas('project', function($query) use ($userId) {
-                $query->where('created_by', $userId)
-                      ->orWhereHas('members', function($q) use ($userId) {
-                          $q->where('user_id', $userId)->where('role', 'team lead');
-                      });
-            })
-            ->orderBy('board_name')
-            ->get();
+        $userRole = Auth::user()->role;
+
+        // Admin dapat akses SEMUA boards tanpa filter
+        if ($userRole === 'admin') {
+            $boards = \App\Models\Board::with('project')
+                ->orderBy('board_name')
+                ->get();
+        } else {
+            // Non-admin: Filter berdasarkan project ownership atau team lead role
+            $boards = \App\Models\Board::with('project')
+                ->whereHas('project', function($query) use ($userId) {
+                    // Option 1: User adalah creator project
+                    $query->where('created_by', $userId)
+                        // Option 2: User adalah team lead di project
+                        ->orWhereHas('members', function($q) use ($userId) {
+                            $q->where('user_id', $userId)
+                              ->where('role', 'team lead');
+                        });
+                })
+                ->orderBy('board_name')
+                ->get();
+        }
     }
 @endphp
 
