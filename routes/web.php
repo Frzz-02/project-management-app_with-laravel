@@ -4,6 +4,7 @@ use App\Http\Controllers\web\AuthenticationController;
 use App\Http\Controllers\web\BoardController;
 use App\Http\Controllers\web\CardController;
 use App\Http\Controllers\web\CardAssignmentController;
+use App\Http\Controllers\web\CardReviewController;
 use App\Http\Controllers\web\CommentController;
 use App\Http\Controllers\web\ProjectController;
 use App\Http\Controllers\web\ProjectMemberController;
@@ -136,6 +137,19 @@ Route::middleware('auth')->group(function () {
     
     // Additional card routes
     Route::patch('cards/{card}/status', [CardController::class, 'updateStatus'])->name('cards.update-status');
+    
+    /**
+     * Card Review Routes
+     * ==================
+     * Route untuk approve/reject card oleh Team Lead
+     * - POST /cards/{card}/reviews       -> Create review (approve/reject dengan notes opsional)
+     * - GET /cards/{card}/reviews        -> Get review history untuk card
+     * 
+     * Authorization: Hanya Team Lead atau Admin
+     * Feature: Realtime broadcast untuk notifikasi
+     */
+    Route::post('cards/{card}/reviews', [CardReviewController::class, 'store'])->name('cards.reviews.store');
+    Route::get('cards/{card}/reviews', [CardReviewController::class, 'index'])->name('cards.reviews.index');
     
     /**
      * Subtask Routes

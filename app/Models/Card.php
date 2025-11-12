@@ -127,6 +127,17 @@ class Card extends Model
     {
         return $this->hasMany(TimeLog::class, 'card_id', 'id');
     }
+
+    /**
+     * Relasi ke CardReview (One to Many)
+     * 
+     * Satu card bisa memiliki banyak review history
+     * Field: id -> card_reviews.card_id
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CardReview::class, 'card_id', 'id');
+    }
     
     /**
      * ====================================
