@@ -8,6 +8,16 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        // Production build settings
+        manifest: true,
+        outDir: 'public/build',
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            }
+        }
+    },
     server: {
         host: 'localhost',
         port: 5173,
