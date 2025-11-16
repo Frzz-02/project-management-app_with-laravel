@@ -184,23 +184,47 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+        $currentUserId = Auth::id();
+        $currentUserRole = Auth::user()->role; // admin/member dari tabel users
+        
+        // Cek role user di project ini (dari project_members)
+        $projectMember = $project->members()->where('user_id', $currentUserId)->first();
+        $projectRole = $projectMember ? $projectMember->role : null; // team lead/developer/designer
+        
         // Load relasi yang diperlukan untuk halaman detail
         $project->load([
             'creator:id,full_name,email',
             'members' => function($query) {
                 $query->with('user:id,full_name,email')->orderBy('role');
             },
-            'boards' => function($query) {
-                $query->withCount('cards')->orderBy('position');
+            'boards' => function($query) use ($currentUserId, $projectRole) {
+                $query->withCount(['cards' => function($q) use ($currentUserId, $projectRole) {
+                    // Jika bukan team lead, hanya hitung cards yang di-assign ke mereka
+                    if ($projectRole && $projectRole !== 'team lead') {
+                        $q->whereHas('assignments', function($assignQ) use ($currentUserId) {
+                            $assignQ->where('user_id', $currentUserId);
+                        });
+                    }
+                }])->orderBy('position');
             },
-            'boards.cards' => function($query) {
+            'boards.cards' => function($query) use ($currentUserId, $projectRole) {
+                // Jika bukan team lead, hanya load cards yang di-assign ke mereka
+                if ($projectRole && $projectRole !== 'team lead') {
+                    $query->whereHas('assignments', function($assignQ) use ($currentUserId) {
+                        $assignQ->where('user_id', $currentUserId);
+                    });
+                }
                 $query->withCount('comments')->orderBy('position');
             },
         ]);
         
+        // Filter boards: hapus board yang tidak punya cards (hanya untuk developer/designer, bukan team lead)
+        if ($projectRole && $projectRole !== 'team lead') {
+            $project->setRelation('boards', $project->boards->filter(function($board) {
+                return $board->cards->count() > 0;
+            }));
+        }
         
-        
-
         // Hitung statistik project
         $statistics = [
             'total_boards' => $project->boards->count(),
@@ -414,5 +438,31 @@ class ProjectController extends Controller
             ->get();
 
         return view('projects.joined-projects', compact('projects'));
+    }
+
+    /**
+     * Redirect member ke project aktif mereka
+     * 
+     * Member hanya boleh punya 1 project aktif (kecuali project lama sudah selesai).
+     * Method ini redirect langsung ke project.show dari project yang ditugaskan.
+     * 
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function myActiveProject()
+    {
+        // Get project member yang aktif untuk user ini
+        $projectMember = ProjectMember::with('project')
+            ->where('user_id', Auth::id())
+            ->whereIn('role', ['developer', 'designer', 'team lead'])
+            ->first();
+
+        // Jika tidak punya project, redirect ke unassigned dashboard
+        if (!$projectMember) {
+            return redirect()->route('unassigned.dashboard')
+                ->with('info', 'Anda belum ditugaskan ke project manapun.');
+        }
+
+        // Redirect langsung ke halaman project
+        return redirect()->route('projects.show', $projectMember->project);
     }
 }

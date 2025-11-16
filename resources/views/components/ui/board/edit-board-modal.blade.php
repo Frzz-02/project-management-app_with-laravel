@@ -38,7 +38,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
          x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+         class="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6">
 
         {{-- Modal Card --}}
         <div class="w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/60 overflow-hidden">

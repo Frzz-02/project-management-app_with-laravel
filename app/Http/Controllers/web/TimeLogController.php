@@ -181,15 +181,23 @@ class TimeLogController extends Controller
 
 
             // Buat time log baru dengan start_time = sekarang (timezone Asia/Jakarta)
-            $timeLog = TimeLog::create([
+            // IMPORTANT: Hanya pass subtask_id jika ada (tidak null)
+            // karena kolom subtask_id di database tidak nullable
+            $timeLogData = [
                 'card_id' => $validatedData['card_id'],
-                'subtask_id' => $validatedData['subtask_id'],
                 'user_id' => $currentUser->id,
                 'start_time' => Carbon::now('Asia/Jakarta'),
                 'end_time' => null, // Masih berjalan
                 'duration_minutes' => 0,
                 'description' => $validatedData['description'] ?? null
-            ]);
+            ];
+
+            // Hanya tambahkan subtask_id jika ada
+            if (!empty($validatedData['subtask_id'])) {
+                $timeLogData['subtask_id'] = $validatedData['subtask_id'];
+            }
+
+            $timeLog = TimeLog::create($timeLogData);
 
 
 
@@ -224,6 +232,25 @@ class TimeLogController extends Controller
                 $cardAssignment->update([
                     'started_at' => Carbon::now('Asia/Jakarta'),
                     'assignment_status' => 'in progress'
+                ]);
+            }
+
+
+
+            // UPDATE CURRENT_TASK_STATUS DI USERS
+            // Hanya update ke "working" jika user start tracking CARD (bukan subtask)
+            // Logic: 
+            // - Jika tracking card (subtask_id null) -> set current_task_status = 'working'
+            // - Jika tracking subtask saja -> TIDAK update (karena card sudah working)
+            if (empty($validatedData['subtask_id'])) {
+                // User start tracking card (bukan subtask)
+                DB::table('users')
+                    ->where('id', $currentUser->id)
+                    ->update(['current_task_status' => 'working']);
+
+                Log::info('User status updated to working', [
+                    'user_id' => $currentUser->id,
+                    'card_id' => $validatedData['card_id']
                 ]);
             }
 
@@ -409,6 +436,41 @@ class TimeLogController extends Controller
                     'completed_at' => Carbon::now('Asia/Jakarta'),
                     'assignment_status' => 'completed'
                 ]);
+            }
+
+
+
+            // UPDATE CURRENT_TASK_STATUS DI USERS KE "IDLE"
+            // Hanya update ke "idle" jika user stop tracking CARD (bukan subtask)
+            // Logic:
+            // - Jika stop tracking card (subtask_id null) -> set current_task_status = 'idle'
+            // - Jika stop tracking subtask saja -> TIDAK update (card masih working)
+            // - TAMBAHAN: Cek apakah masih ada card lain yang sedang di-track
+            if (is_null($timeLog->subtask_id)) {
+                // User stop tracking card (bukan subtask)
+                // Cek apakah user masih punya card lain yang sedang di-track
+                $otherOngoingCardTracking = TimeLog::where('user_id', $currentUser->id)
+                    ->whereNull('end_time')           // Masih ongoing
+                    ->whereNull('subtask_id')         // Card tracking (bukan subtask)
+                    ->where('id', '!=', $timeLog->id) // Selain yang baru di-stop
+                    ->exists();
+
+                if (!$otherOngoingCardTracking) {
+                    // Tidak ada card lain yang di-track, set ke idle
+                    DB::table('users')
+                        ->where('id', $currentUser->id)
+                        ->update(['current_task_status' => 'idle']);
+
+                    Log::info('User status updated to idle', [
+                        'user_id' => $currentUser->id,
+                        'stopped_card_id' => $timeLog->card_id
+                    ]);
+                } else {
+                    Log::info('User status remains working - other card tracking ongoing', [
+                        'user_id' => $currentUser->id,
+                        'stopped_card_id' => $timeLog->card_id
+                    ]);
+                }
             }
 
 

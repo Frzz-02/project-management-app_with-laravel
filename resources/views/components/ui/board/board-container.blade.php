@@ -11,7 +11,7 @@
                 <h3 class="text-xl font-semibold text-gray-800">Project Boards</h3>
             </div>
 
-            @if(!$isCardStatus)
+            @if(!$isCardStatus && isset($userRole) && $userRole === 'team lead')
                 <button @click="$dispatch('add-board-modal')"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

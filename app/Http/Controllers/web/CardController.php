@@ -52,8 +52,9 @@ class CardController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil user ID yang sedang login
+        // Ambil user ID dan role yang sedang login
         $userId = Auth::id();
+        $userRole = Auth::user()->role;
         
         // Project filter - default ke project pertama yang accessible jika tidak dispesifikasikan
         $projectId = $request->get('project_id');
@@ -77,6 +78,13 @@ class CardController extends Controller
             ->whereHas('board', function($q) use ($projectId) {
                 $q->where('project_id', $projectId);
             });
+        
+        // Jika user adalah member, hanya tampilkan cards yang ditugaskan kepada mereka
+        if ($userRole === 'member') {
+            $query->whereHas('assignments', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        }
 
         // Filter: Search berdasarkan title atau description
         if ($request->filled('search')) {
@@ -128,12 +136,19 @@ class CardController extends Controller
         // Paginate hasil dengan 12 items per page, preserve query string untuk filter
         $cards = $query->paginate(12)->withQueryString();
         
-        
-        
         // Ambil semua cards dari project untuk menghitung statistics
-        $projectCards = Card::whereHas('board', function($q) use ($projectId) {
+        $projectCardsQuery = Card::whereHas('board', function($q) use ($projectId) {
             $q->where('project_id', $projectId);
-        })->get();
+        });
+        
+        // Jika user adalah member, filter statistics juga hanya untuk cards yang ditugaskan
+        if ($userRole === 'member') {
+            $projectCardsQuery->whereHas('assignments', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        }
+        
+        $projectCards = $projectCardsQuery->get();
 
         // Hitung statistics untuk dashboard/overview
         $statistics = [
@@ -152,6 +167,11 @@ class CardController extends Controller
         // Ambil info project yang sedang dipilih
         $selectedProject = $availableProjects->find($projectId);
 
+        // Ambil boards yang tersedia dari project yang dipilih saja
+        $availableBoards = \App\Models\Board::where('project_id', $projectId)
+            ->orderBy('board_name')
+            ->get();
+
         // Return view dengan semua data yang dibutuhkan
         return view('cards.index', [
             'cards' => $cards,
@@ -159,6 +179,7 @@ class CardController extends Controller
             'availableProjects' => $availableProjects,
             'selectedProject' => $selectedProject,
             'selectedProjectId' => $projectId,
+            'availableBoards' => $availableBoards,
             'filterData' => [
                 'users' => collect(),
                 'boards' => collect(),

@@ -35,17 +35,14 @@
     .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
     }
-    
     .custom-scrollbar::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 10px;
     }
-    
     .custom-scrollbar::-webkit-scrollbar-thumb {
         background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
         border-radius: 10px;
     }
-    
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
     }
@@ -60,7 +57,7 @@
      x-transition:leave="transition ease-in duration-200"
      x-transition:leave-start="opacity-100"
      x-transition:leave-end="opacity-0"
-     class="fixed inset-0 z-50 overflow-y-auto"
+     class="fixed inset-0 z-[80] overflow-y-auto"
      @keydown.escape="$store.modal.close()"
      style="display: none;">
     

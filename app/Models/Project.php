@@ -71,34 +71,34 @@ class Project extends Model
      * ====================================
      */
 
-    /**
-     * Relasi ke User yang membuat project (One to Many - Inverse)
-     * 
-     * Setiap project dibuat oleh satu user
-     * Field: created_by -> users.id
-     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by', 'id');
     }
 
-    /**
-     * Relasi ke ProjectMember (One to Many)
-     * 
-     * Satu project bisa memiliki banyak anggota tim
-     * Field: id -> project_members.project_id
-     */
     public function members(): HasMany
     {
         return $this->hasMany(ProjectMember::class, 'project_id', 'id');
     }
 
     /**
-     * Relasi ke Board (One to Many)
+     * Relasi ke Team Leader (via project_members)
      * 
-     * Satu project bisa memiliki banyak board kanban
-     * Field: id -> boards.project_id
+     * Get user yang menjadi team lead di project ini
+     * Field: project_id -> project_members.project_id WHERE role = 'team lead'
      */
+    public function teamLeader()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            ProjectMember::class,
+            'project_id',    // Foreign key on project_members table
+            'id',            // Foreign key on users table
+            'id',            // Local key on projects table
+            'user_id'        // Local key on project_members table
+        )->where('project_members.role', 'team lead');
+    }
+
     public function boards(): HasMany
     {
         return $this->hasMany(Board::class, 'project_id', 'id');

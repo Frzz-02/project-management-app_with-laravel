@@ -1,17 +1,25 @@
 <?php
 
-use App\Http\Controllers\web\AuthenticationController;
-use App\Http\Controllers\web\BoardController;
+use App\Models\Card;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\web\CardController;
-use App\Http\Controllers\web\CardAssignmentController;
-use App\Http\Controllers\web\CardReviewController;
+use App\Http\Controllers\web\BoardController;
 use App\Http\Controllers\web\CommentController;
 use App\Http\Controllers\web\ProjectController;
-use App\Http\Controllers\web\ProjectMemberController;
 use App\Http\Controllers\web\SubtaskController;
 use App\Http\Controllers\web\TimeLogController;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\web\CardReviewController;
+use App\Http\Controllers\web\AdminSettingsController;
+use App\Http\Controllers\web\ProjectMemberController;
+use App\Http\Controllers\web\AdminDashboardController;
+use App\Http\Controllers\web\AuthenticationController;
+use App\Http\Controllers\web\CardAssignmentController;
+use App\Http\Controllers\web\AdminStatisticsController;
+use App\Http\Controllers\web\AdminActivityLogController;
+use App\Http\Controllers\web\TeamLeaderDashboardController;
 
 /**
  * ROUTE DOCUMENTATION
@@ -73,13 +81,124 @@ Route::middleware('auth')->group(function () {
     /**
      * Dashboard Routes
      * ===============
-     * Route untuk halaman dashboard utama
+     * Route untuk halaman dashboard utama dengan smart routing:
+     * - Admin → admin.dashboard
+     * - Team Lead → team-leader.dashboard
+     * - Member with projects → member.dashboard
+     * - Member without projects → unassigned.dashboard
      */
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $user = auth()->user();
+        
+        // Check if admin
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+        
+        // Check if team leader
+        $isTeamLeader = \App\Models\ProjectMember::where('user_id', $user->id)
+            ->where('role', 'team lead')
+            ->exists();
+        
+        if ($isTeamLeader) {
+            return redirect()->route('team-leader.dashboard');
+        }
+        
+        // Check if member (developer/designer)
+        $isMember = \App\Models\ProjectMember::where('user_id', $user->id)
+            ->whereIn('role', ['developer', 'designer'])
+            ->exists();
+        
+        if ($isMember) {
+            // Member has project assignments
+            return redirect()->route('member.dashboard');
+        }
+        
+        // User not assigned to any project
+        return redirect()->route('unassigned.dashboard');
     })->name('dashboard');
 
 
+    /**
+     * Profile Routes
+     * ==============
+     * Route untuk mengelola profile user
+     */
+    Route::get('/profile/edit', [\App\Http\Controllers\web\ProfileController::class, 'edit'])
+        ->name('profile.edit');
+    
+    Route::put('/profile/update', [\App\Http\Controllers\web\ProfileController::class, 'update'])
+        ->name('profile.update');
+    
+    Route::delete('/profile/delete-picture', [\App\Http\Controllers\web\ProfileController::class, 'deleteProfilePicture'])
+        ->name('profile.delete-picture');
+
+
+
+
+    /**
+     * Admin Dashboard
+     * ===============
+     * Route untuk admin dashboard dengan analytics dan reporting
+     * - Middleware: auth + admin (checked in controller)
+     */
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+        ->name('admin.dashboard')
+        ->middleware('admin');
+
+
+
+
+    /**
+     * Admin Activity Logs
+     * ===================
+     * Route untuk menampilkan system activity logs
+     */
+    Route::get('/admin/activity-logs', [AdminActivityLogController::class, 'index'])
+        ->name('admin.activity-logs')
+        ->middleware('admin');
+    
+
+
+
+    /**
+     * Admin Statistics
+     * ================
+     * Route untuk menampilkan comprehensive analytics
+     */
+    Route::get('/admin/statistics', [AdminStatisticsController::class, 'index'])
+        ->name('admin.statistics')
+        ->middleware('admin');
+    
+
+
+
+
+    /**
+     * Admin Settings
+     * ==============
+     * Route untuk system settings dan maintenance
+     */
+    Route::get('/admin/settings', [AdminSettingsController::class, 'index'])
+        ->name('admin.settings')
+        ->middleware('admin');
+    
+    // Settings Actions
+    Route::post('/admin/settings/clear-cache', [AdminSettingsController::class, 'clearCache'])
+        ->name('admin.settings.clear-cache')
+        ->middleware('admin');
+    
+    Route::post('/admin/settings/optimize', [AdminSettingsController::class, 'optimize'])
+        ->name('admin.settings.optimize')
+        ->middleware('admin');
+    
+    Route::post('/admin/settings/clear-logs', [AdminSettingsController::class, 'clearLogs'])
+        ->name('admin.settings.clear-logs')
+        ->middleware('admin');
+    
+    Route::post('/admin/settings/run-migrations', [AdminSettingsController::class, 'runMigrations'])
+        ->name('admin.settings.run-migrations')
+        ->middleware('admin');
     
     
     
@@ -120,6 +239,12 @@ Route::middleware('auth')->group(function () {
     // Additional board routes
     Route::get('boards/{board}/members', [BoardController::class, 'getMembers'])->name('boards.members');
 
+
+
+
+
+
+
     /**
      * Card Routes
      * ===========
@@ -135,22 +260,37 @@ Route::middleware('auth')->group(function () {
         'destroy' => 'cards.destroy',     // DELETE /cards/{card}
     ]);
     
+
+
     // Additional card routes
     Route::patch('cards/{card}/status', [CardController::class, 'updateStatus'])->name('cards.update-status');
     
+
+
+
+
+
     /**
      * Card Review Routes
      * ==================
      * Route untuk approve/reject card oleh Team Lead
      * - POST /cards/{card}/reviews       -> Create review (approve/reject dengan notes opsional)
      * - GET /cards/{card}/reviews        -> Get review history untuk card
+     * - GET /my-card-reviews             -> Halaman review history untuk developer/designer
      * 
-     * Authorization: Hanya Team Lead atau Admin
+     * Authorization: Hanya Team Lead atau Admin untuk approve/reject
+     *                Developer/Designer untuk melihat review history mereka
      * Feature: Realtime broadcast untuk notifikasi
      */
     Route::post('cards/{card}/reviews', [CardReviewController::class, 'store'])->name('cards.reviews.store');
     Route::get('cards/{card}/reviews', [CardReviewController::class, 'index'])->name('cards.reviews.index');
+    Route::get('/my-card-reviews', [CardReviewController::class, 'myReviews'])->name('card-reviews.my-reviews');
     
+
+
+
+
+
     /**
      * Subtask Routes
      * ==============
@@ -165,6 +305,10 @@ Route::middleware('auth')->group(function () {
     
     
     
+
+
+
+
     
     /**
      * Time Tracking Routes
@@ -220,6 +364,10 @@ Route::middleware('auth')->group(function () {
     
     
     
+
+
+
+
     /**
      * CARD ASSIGNMENTS ROUTES
      * ========================================
@@ -231,6 +379,11 @@ Route::middleware('auth')->group(function () {
     Route::post('card-assignments/unassign', [CardAssignmentController::class, 'unassign'])->name('card-assignments.unassign');
     
     
+
+
+
+
+
     
     // Test route for simple cards view
     Route::get('cards-simple', function() {
@@ -277,11 +430,137 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-projects', [ProjectController::class, 'myProjects'])
         ->name('projects.my-projects');
     
-    // Route untuk menampilkan project dimana user adalah anggota tim
+    // Route untuk menampilkan project dimana user adalah anggota tim (list)
     Route::get('/joined-projects', [ProjectController::class, 'joinedProjects'])
         ->name('projects.joined-projects');
+    
+    // Route untuk redirect member ke project aktif mereka (single project)
+    Route::get('/my-active-project', [ProjectController::class, 'myActiveProject'])
+        ->name('projects.my-active-project');
+    
+    
+    
+    /**
+     * Notification Routes
+     * ==================
+     * Route untuk notifikasi realtime (card reviewed, assigned, dll)
+     */
+    
+    // Web route - halaman notifikasi
+    Route::get('/notifications', [NotificationController::class, 'page'])
+        ->name('notifications.page');
+    
+    // API routes untuk AJAX calls
+    Route::prefix('api/notifications')->name('notifications.')->group(function () {
+        // Get recent notifications untuk dropdown (limit 10)
+        Route::get('/recent', [NotificationController::class, 'recent'])
+            ->name('recent');
+        
+        // Get unread count untuk badge
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])
+            ->name('unread-count');
+        
+        // Get all notifications dengan pagination dan filter
+        Route::get('/', [NotificationController::class, 'index'])
+            ->name('api.index');
+        
+        // Mark single notification as read
+        Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])
+            ->name('mark-read');
+        
+        // Mark all notifications as read
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])
+            ->name('mark-all-read');
+        
+        // Delete single notification
+        Route::delete('/{notification}', [NotificationController::class, 'destroy'])
+            ->name('destroy');
+        
+        // Delete all read notifications
+        Route::delete('/read/all', [NotificationController::class, 'deleteAllRead'])
+            ->name('delete-all-read');
+    });
+    
+    
+
+
+    
+// Team Leader Dashboard Routes
+Route::middleware('team.leader')->prefix('team-leader')->name('team-leader.')->group(function () {
+    // Main dashboard
+    Route::get('/dashboard', [TeamLeaderDashboardController::class, 'index'])
+        ->name('dashboard');
+    
+    // Chart APIs
+    Route::get('/dashboard/chart/task-status', [TeamLeaderDashboardController::class, 'getTaskStatusChart'])
+        ->name('dashboard.chart.task-status');
+    
+    Route::get('/dashboard/chart/team-workload', [TeamLeaderDashboardController::class, 'getTeamWorkloadChart'])
+        ->name('dashboard.chart.team-workload');
+    
+    // Cache management
+    Route::post('/dashboard/clear-cache', [TeamLeaderDashboardController::class, 'clearCache'])
+        ->name('dashboard.clear-cache');
+});
+
+// Member Dashboard Routes (Developer/Designer)
+Route::middleware('member')->prefix('member')->name('member.')->group(function () {
+    // Main dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\web\MemberDashboardController::class, 'index'])
+        ->name('dashboard');
+    
+    // Task actions
+    Route::post('/tasks/{card}/start', [\App\Http\Controllers\web\MemberDashboardController::class, 'startTask'])
+        ->name('tasks.start');
+    
+    Route::post('/tasks/{card}/pause', [\App\Http\Controllers\web\MemberDashboardController::class, 'pauseTask'])
+        ->name('tasks.pause');
+    
+    // Cache management
+    Route::post('/dashboard/clear-cache', [\App\Http\Controllers\web\MemberDashboardController::class, 'clearCache'])
+        ->name('dashboard.clear-cache');
+});
+
+// Unassigned Member Dashboard (Users without project assignments)
+Route::middleware('auth')->prefix('unassigned')->name('unassigned.')->group(function () {
+    // Main unassigned dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\web\UnassignedMemberDashboardController::class, 'index'])
+        ->name('dashboard');
+});
+
+// API endpoint for assignment check (no prefix for easy access)
+Route::middleware('auth')->get('/api/check-assignment', [\App\Http\Controllers\web\UnassignedMemberDashboardController::class, 'checkAssignment'])
+    ->name('api.check-assignment');
+
+
+
+
+    
+    /**
+     * Report Routes (ADMIN ONLY)
+     * =========================
+     * Route untuk laporan sistem
+     */
+    
+    // Halaman laporan (admin only)
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index')
+        ->middleware('admin');
+    
+    // API endpoint untuk data laporan (admin only)
+    Route::get('/api/reports/data', [ReportController::class, 'getData'])
+        ->name('reports.data')
+        ->middleware('admin');
 
 });
+
+
+/**
+ * Logout Route (POST method)
+ * =========================
+ */
+Route::post('/logout', [AuthenticationController::class, 'logout'])
+    ->name('logout');
 
 
 

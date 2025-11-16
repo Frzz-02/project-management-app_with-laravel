@@ -1,0 +1,19 @@
+untuk admin : 
+admin bisa menambahkan project baru dengan 1 teamlead
+merekrut beberapa user dan menetapkan role mereka (developer/designer) ke dalam project
+melihat aktifitas beberapa member yang ada di dalam project untuk memantau kinerjanya
+dapat mencetak laporan untuk melihat kinerja member yang ada dalam proyek
+
+untuk team leader :
+dapat membuat board untuk mengklasifikasikan/mengelompokkan tugas berdasarkan kategori tertentu
+dapat membuat card/tugas dan menugaskan/assign ke anggota proyek yang telah di rekrut oleh admin
+meng approve/reject tugas jika tugas sudah selesai
+membuat komentar untuk mengkoordinasikan/berdiskusi dengan beberapa anggota dalam proyek
+
+untuk designer/developer : 
+mulai mengerjakan task yang ditugaskan team leader kepadanya dengan mengklik mulai mengerjakan yang akan mencatat waktu selama pengerjaan berlangsung (fitur ini agar developer/designer bisa membuat subtask untuk mencatat apa aja yang harus dikerjakan (seperti sistem todo list))
+dapat membuat subtask ke dalam task yang ditugaskan oleh team leader kepadanya (subtask bisa dilihat oleh member lain dengan penugasan task yang sama)
+mulai mengerjakan subtask yang telah dibuat dengan mengklik mulai mengerjakan yang akan mencatat waktu selama pengerjaan berlangsung
+mengupdate subtask ke todo/inprogress/done untuk menentukan apa yang harus dilakukan setelahnya
+membuat komentar untuk koordinasi/berdiskusi dengan sesama developer/designer mengenai tugas/task yang telah ditugaskan kepada mereka
+melihat history reject/approve dari teamlead dan melihat pesan dari team lead pada saat team lead meng reject/approve tugas tersebut

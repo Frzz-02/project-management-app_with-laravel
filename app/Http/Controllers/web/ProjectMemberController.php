@@ -101,9 +101,33 @@ class ProjectMemberController extends Controller
 
 
 
-        // Get available users untuk invite modal (users yang belum jadi member)
-        $existingMemberIds = ProjectMember::pluck('user_id')->toArray();
-        $availableUsers = User::whereNotIn('id', $existingMemberIds)
+        // Get available users untuk invite modal
+        // Filter: exclude users yang punya project aktif (ada card belum done)
+        $userIdsWithActiveProjects = ProjectMember::with('project.boards.cards')
+            ->get()
+            ->filter(function($projectMember) {
+                // Get all cards dari semua boards di project ini
+                $allCards = $projectMember->project->boards->flatMap(function($board) {
+                    return $board->cards;
+                });
+
+                // Jika tidak ada cards, anggap project selesai (boleh di-invite)
+                if ($allCards->isEmpty()) {
+                    return false;
+                }
+
+                // Check apakah ada card yang belum done
+                $hasUnfinishedCards = $allCards->contains(function($card) {
+                    return $card->status !== 'done';
+                });
+
+                // Return true jika ada unfinished cards (exclude user ini)
+                return $hasUnfinishedCards;
+            })
+            ->pluck('user_id')
+            ->toArray();
+
+        $availableUsers = User::whereNotIn('id', $userIdsWithActiveProjects)
             ->where('id', '!=', Auth::id())
             ->select('id', 'full_name', 'email', 'username')
             ->orderBy('full_name')
@@ -126,8 +150,15 @@ class ProjectMemberController extends Controller
      * Method ini mengundang user yang sudah ada ke dalam project dengan:
      * - Validasi input data
      * - Check duplicate member
+     * - VALIDASI 1 PROJECT PER USER (kecuali project lama sudah selesai)
      * - Database transaction
      * - Flash message feedback
+     * 
+     * BUSINESS RULE: 
+     * User hanya boleh ditugaskan ke 1 project aktif.
+     * User bisa diberi project baru jika:
+     * 1. Belum pernah ada di project_members, ATAU
+     * 2. Project sebelumnya sudah selesai (semua card status = 'done')
      * 
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
@@ -153,28 +184,63 @@ class ProjectMemberController extends Controller
         try {
             DB::beginTransaction();
 
-            // Check if user is already a member of this project
-            $existingMember = ProjectMember::where('user_id', $validated['user_id'])
-                ->where('project_id', $validated['project_id'] ?? 1)
+            $userId = $validated['user_id'];
+            $projectId = $validated['project_id'] ?? 1;
+
+            // Check if user is already a member of THIS project
+            $existingMemberInThisProject = ProjectMember::where('user_id', $userId)
+                ->where('project_id', $projectId)
                 ->first();
 
-            if ($existingMember) {
+            if ($existingMemberInThisProject) {
                 return redirect()->route('project-members.index')
                     ->with('error', 'User is already a member of this project.');
             }
 
+            // VALIDASI: Check apakah user sudah punya project aktif lain
+            $existingActiveProject = ProjectMember::where('user_id', $userId)
+                ->with('project.boards.cards')
+                ->first();
 
-            // Create new project member
+            if ($existingActiveProject) {
+                // User punya project lain, cek apakah project itu sudah selesai
+                $project = $existingActiveProject->project;
+                
+                // Get semua cards dari semua boards di project ini
+                $allCards = $project->boards->flatMap(function($board) {
+                    return $board->cards;
+                });
+
+                // Jika tidak ada cards sama sekali, anggap project selesai (edge case)
+                if ($allCards->isEmpty()) {
+                    // Project kosong, boleh assign ke project baru
+                } else {
+                    // Check apakah ada card yang belum done
+                    $hasUnfinishedCards = $allCards->contains(function($card) {
+                        return $card->status !== 'done';
+                    });
+
+                    if ($hasUnfinishedCards) {
+                        // Ada card yang belum selesai, tidak boleh assign ke project baru
+                        $user = User::find($userId);
+                        return redirect()->route('project-members.index')
+                            ->with('error', "{$user->full_name} masih memiliki project aktif ({$project->project_name}). User hanya boleh ditugaskan ke 1 project. Tunggu sampai semua task di project sebelumnya selesai.");
+                    }
+                }
+            }
+
+
+            // Validasi lolos, create new project member
             $projectMember = ProjectMember::create([
-                'project_id' => $validated['project_id'] ?? 1,
-                'user_id' => $validated['user_id'],
+                'project_id' => $projectId,
+                'user_id' => $userId,
                 'role' => $validated['role'],
                 'joined_at' => now()
             ]);
 
 
             // Get user name for success message
-            $user = User::find($validated['user_id']);
+            $user = User::find($userId);
             
             DB::commit();
 
@@ -289,8 +355,14 @@ class ProjectMemberController extends Controller
      * Method ini untuk search functionality di invite modal dengan:
      * - Real-time search
      * - JSON response
-     * - Exclude existing members
+     * - Exclude users yang sudah punya project aktif
+     * - User boleh muncul jika project sebelumnya sudah selesai (semua card done)
      * - Limit results untuk performance
+     * 
+     * BUSINESS RULE:
+     * User yang muncul di list adalah:
+     * 1. Belum pernah ada di project_members, ATAU
+     * 2. Punya project tapi semua card sudah done
      * 
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -299,11 +371,33 @@ class ProjectMemberController extends Controller
     {
         $searchTerm = $request->get('search', '');
         
-        // Get existing member IDs to exclude
-        $existingMemberIds = ProjectMember::pluck('user_id')->toArray();
+        // Get users yang TIDAK BOLEH di-invite (punya project dengan card belum done)
+        $userIdsWithActiveProjects = ProjectMember::with('project.boards.cards')
+            ->get()
+            ->filter(function($projectMember) {
+                // Get all cards dari semua boards di project ini
+                $allCards = $projectMember->project->boards->flatMap(function($board) {
+                    return $board->cards;
+                });
+
+                // Jika tidak ada cards, anggap project selesai (boleh di-invite)
+                if ($allCards->isEmpty()) {
+                    return false;
+                }
+
+                // Check apakah ada card yang belum done
+                $hasUnfinishedCards = $allCards->contains(function($card) {
+                    return $card->status !== 'done';
+                });
+
+                // Return true jika ada unfinished cards (exclude user ini)
+                return $hasUnfinishedCards;
+            })
+            ->pluck('user_id')
+            ->toArray();
         
-        // Search available users
-        $users = User::whereNotIn('id', $existingMemberIds)
+        // Search available users (exclude yang punya project aktif dan diri sendiri)
+        $users = User::whereNotIn('id', $userIdsWithActiveProjects)
             ->where('id', '!=', Auth::id())
             ->where(function($query) use ($searchTerm) {
                 $query->where('full_name', 'like', "%{$searchTerm}%")

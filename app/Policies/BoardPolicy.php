@@ -4,25 +4,37 @@ namespace App\Policies;
 
 use App\Models\Board;
 use App\Models\User;
+use App\Models\ProjectMember;
 use Illuminate\Auth\Access\Response;
 
 /**
  * BoardPolicy - Authorization untuk Board Management
  * 
  * Policy ini mengatur akses ke Board berdasarkan role:
- * - Hanya USER dengan role 'admin' yang bisa CRUD Board
- * - Admin yang mengatur struktur kanban board di project
+ * - Admin bisa CRUD semua board
+ * - User dengan role 'team lead' di project_members bisa CRUD board di project mereka
+ * - Team lead yang mengatur struktur kanban board di project
  */
 class BoardPolicy
 {
     /**
      * Determine whether the user can view any models.
      * 
-     * Melihat daftar board - hanya admin
+     * Melihat daftar board:
+     * - Admin bisa lihat semua
+     * - Team lead bisa lihat board di project mereka
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa akses semua
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Check if user adalah team lead di minimal 1 project
+        return ProjectMember::where('user_id', $user->id)
+            ->where('role', 'team lead')
+            ->exists();
     }
 
     /**
@@ -30,6 +42,7 @@ class BoardPolicy
      * 
      * Melihat detail board:
      * - Admin bisa lihat semua board
+     * - Team lead bisa lihat board di project mereka
      * - Project member bisa lihat board di project mereka
      */
     public function view(User $user, Board $board): bool
@@ -39,18 +52,28 @@ class BoardPolicy
             return true;
         }
         
-        // Project member bisa lihat board di project mereka
+        // Team lead atau member bisa lihat board di project mereka
         return $board->project->members()->where('user_id', $user->id)->exists();
     }
 
     /**
      * Determine whether the user can create models.
      * 
-     * Membuat board baru - hanya admin
+     * Membuat board baru:
+     * - Admin bisa create board di semua project
+     * - Team lead bisa create board di project mereka
      */
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa create board
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Check if user adalah team lead di minimal 1 project
+        return ProjectMember::where('user_id', $user->id)
+            ->where('role', 'team lead')
+            ->exists();
     }
 
     /**
@@ -58,7 +81,7 @@ class BoardPolicy
      * 
      * Update board:
      * - Admin bisa update semua board
-     * - Team lead dari project yang bersangkutan bisa update board
+     * - Team lead bisa update board di project mereka
      */
     public function update(User $user, Board $board): bool
     {
@@ -67,40 +90,32 @@ class BoardPolicy
             return true;
         }
         
-        // Team lead dari project bisa update board
-        if ($board->project->members->contains('user_id', $user->id)) {
-            $projectMember = $user->projectMemberships->firstWhere('project_id', $board->project_id);
-            if ($projectMember && $projectMember->role === 'team lead') {
-                return true;
-            }
-        }
-        
-        return false;
+        // Check if user adalah team lead di project ini
+        return ProjectMember::where('user_id', $user->id)
+            ->where('project_id', $board->project_id)
+            ->where('role', 'team lead')
+            ->exists();
     }
 
     /**
      * Determine whether the user can delete the model.
      * 
      * Hapus board:
-     * - Admin bisa hapus semua board
-     * - Team lead dari project yang bersangkutan bisa hapus board
+     * - Admin bisa delete semua board
+     * - Team lead bisa delete board di project mereka
      */
     public function delete(User $user, Board $board): bool
     {
-        // Admin bisa hapus semua board
+        // Admin bisa delete semua board
         if ($user->role === 'admin') {
             return true;
         }
         
-        // Team lead dari project bisa hapus board
-        if ($board->project->members->contains('user_id', $user->id)) {
-            $projectMember = $user->projectMemberships->firstWhere('project_id', $board->project_id);
-            if ($projectMember && $projectMember->role === 'team lead') {
-                return true;
-            }
-        }
-        
-        return false;
+        // Check if user adalah team lead di project ini
+        return ProjectMember::where('user_id', $user->id)
+            ->where('project_id', $board->project_id)
+            ->where('role', 'team lead')
+            ->exists();
     }
 
     /**
@@ -108,7 +123,16 @@ class BoardPolicy
      */
     public function restore(User $user, Board $board): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa restore semua board
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Team lead bisa restore board di project mereka
+        return ProjectMember::where('user_id', $user->id)
+            ->where('project_id', $board->project_id)
+            ->where('role', 'team lead')
+            ->exists();
     }
 
     /**
@@ -116,6 +140,16 @@ class BoardPolicy
      */
     public function forceDelete(User $user, Board $board): bool
     {
-        return $user->role === 'admin';
+        // Admin bisa force delete semua board
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Team lead bisa force delete board di project mereka
+        return ProjectMember::where('user_id', $user->id)
+            ->where('project_id', $board->project_id)
+            ->where('role', 'team lead')
+            ->exists();
     }
 }
+

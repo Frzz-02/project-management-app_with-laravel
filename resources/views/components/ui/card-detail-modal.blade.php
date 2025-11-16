@@ -8,7 +8,7 @@
      x-transition:leave="transition ease-in duration-200"
      x-transition:leave-start="opacity-100"
      x-transition:leave-end="opacity-0"
-     class="fixed inset-0 z-50 overflow-y-auto"
+     class="fixed inset-0 z-[80] overflow-y-auto"
      @keydown.escape="$store.modal.close()"
      style="display: none;">
     
@@ -606,7 +606,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[60] overflow-y-auto"
+         class="fixed inset-0 z-[90] overflow-y-auto"
          style="display: none;">
         
         <!-- Backdrop -->

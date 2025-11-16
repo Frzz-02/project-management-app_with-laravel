@@ -1,8 +1,8 @@
-@extends('layouts.app')
-
+@extends(Auth::user()->role === 'admin' ? 'layouts.admin' : 'layouts.app')
 @section('title', 'All Projects')
-
 @section('content')
+
+
 {{-- 
     HALAMAN INDEX PROJECTS - ULTRA MODERN DESIGN
     ==========================================
@@ -16,6 +16,7 @@
     - Color-coded project categories
     - Advanced analytics dashboard
 --}}
+
 
 <!-- Background Elements -->
 <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">

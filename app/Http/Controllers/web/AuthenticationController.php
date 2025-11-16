@@ -33,7 +33,14 @@ class AuthenticationController extends Controller
         ];
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate(); 
+            $request->session()->regenerate();
+            
+            // Redirect berdasarkan role user
+            $user = Auth::user();
+            if ($user->role === 'admin') {
+                return redirect()->intended('/admin/dashboard');
+            }
+            
             return redirect()->intended('/dashboard'); 
         }
 
@@ -48,8 +55,8 @@ class AuthenticationController extends Controller
     {
         // dd($request->all());
         $validateData = $request->validate([
+            'username' => 'required|max:255|unique:users',
             'full_name' => 'required|max:255',
-            'username' => 'unique:users|max:255',
             'email' => 'required|email:dns|unique:users|max:255',
             'password' => 'required|min:10|max:255|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).+$/',
             // maksud dari regex disitu : 
@@ -64,5 +71,18 @@ class AuthenticationController extends Controller
 
         User::create($validateData);
         return back()->with('success', 'Registrasi berhasil, silahkan untuk login terlebih dahulu !');
+    }
+
+    /**
+     * Logout user dan clear session
+     */
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        return redirect('/')->with('success', 'Logout berhasil! Sampai jumpa kembali.');
     }
 }

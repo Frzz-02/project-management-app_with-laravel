@@ -8,12 +8,14 @@ use Illuminate\View\Component;
 class BoardContainer extends Component
 {
     public $isCardStatus;
+    public $userRole;
 
     /**
      * Create a new component instance.
      */
-    public function __construct($isCardStatus = false)
+    public function __construct($userRole, $isCardStatus = false)
     {
+        $this->userRole = $userRole;
         $this->isCardStatus = $isCardStatus;
     }
 

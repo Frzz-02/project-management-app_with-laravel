@@ -241,11 +241,19 @@
 
                         <!-- Username Field -->
                         <div class="relative">
-                            <input type="username" 
+                            <input type="text" 
                                    name="username" 
                                    required 
                                    placeholder="Username"
                                    class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all duration-300">
+                            <p class="mt-2 text-xs text-white/70 px-2">
+                                <span class="inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Username harus unik, maksimal 255 karakter
+                                </span>
+                            </p>
                         </div>
                         
                         
@@ -271,6 +279,14 @@
                                 focus:ring-white/50 = ring putih 50% opacity
                                 transition-all duration-300 = animasi smooth 300ms
                             --}}
+                            <p class="mt-2 text-xs text-white/70 px-2">
+                                <span class="inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Nama lengkap maksimal 255 karakter
+                                </span>
+                            </p>
                         </div>
 
                         
@@ -283,6 +299,14 @@
                                    required 
                                    placeholder="Email Address"
                                    class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all duration-300">
+                            <p class="mt-2 text-xs text-white/70 px-2">
+                                <span class="inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Email harus valid dan unik, maksimal 255 karakter
+                                </span>
+                            </p>
                         </div>
                         
                         
@@ -296,6 +320,17 @@
                                    required 
                                    placeholder="Password"
                                    class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all duration-300">
+                            <div class="mt-2 text-xs text-white/70 px-2 space-y-1">
+                                <p class="inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Minimal 10 karakter, maksimal 255 karakter</span>
+                                </p>
+                                <p class="text-white/60 pl-4">
+                                    Harus mengandung: huruf besar, huruf kecil, angka, dan simbol
+                                </p>
+                            </div>
                         </div>
                         
                         
@@ -385,7 +420,7 @@
                     <p class="text-lg lg:text-xl text-white/90 font-light leading-relaxed">
                         {{-- Mengurangi ukuran dari text-2xl ke text-xl --}}
                         Bergabunglah dengan ribuan pengguna yang sudah merasakan kemudahan mengelola proyek dengan 
-                        <span class="text-cyan-200 font-semibold">TaskFlow Pro</span>
+                        <span class="text-cyan-200 font-semibold">TaskFlow</span>
                     </p>
                 </div>
                 

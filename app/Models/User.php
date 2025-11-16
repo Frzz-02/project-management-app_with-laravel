@@ -37,6 +37,9 @@ class User extends Authenticatable
         'email',
         'role',
         'password',
+        'phone',
+        'profile_picture',
+        'bio',
     ];
     protected $guarded = ['id', 'created_at'];
 
@@ -91,6 +94,8 @@ class User extends Authenticatable
         return $this->hasMany(ProjectMember::class, 'user_id', 'id');
     }
 
+
+    
     /**
      * Relasi ke Card yang dibuat user (One to Many)
      * 
@@ -122,6 +127,30 @@ class User extends Authenticatable
     public function timeLogs(): HasMany
     {
         return $this->hasMany(TimeLog::class, 'user_id', 'id');
+    }
+
+    /**
+     * Relasi ke CardAssignment (One to Many)
+     * 
+     * User bisa memiliki banyak card assignment
+     * Field: id -> card_assignments.user_id
+     */
+    public function cardAssignments(): HasMany
+    {
+        return $this->hasMany(CardAssignment::class, 'user_id', 'id');
+    }
+
+    /**
+     * Relasi ke Project yang di-lead (Many to Many via project_members)
+     * 
+     * User bisa menjadi Team Leader di banyak project
+     * Field: id -> project_members.user_id WHERE role = 'team lead'
+     */
+    public function ledProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members', 'user_id', 'project_id')
+            ->wherePivot('role', 'team lead')
+            ->withTimestamps();
     }
 
     /**

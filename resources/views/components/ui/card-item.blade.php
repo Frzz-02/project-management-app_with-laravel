@@ -47,7 +47,7 @@
     ];
 @endphp
 
-<div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group overflow-hidden"
      @click="
         console.log('🚀 Card clicked:', {{ \Illuminate\Support\Js::from($cardData) }}); 
         $dispatch('card-detail-modal', {{ \Illuminate\Support\Js::from($cardData) }}); 
@@ -55,79 +55,90 @@
      ">
     
     <!-- Card Header -->
-    <div class="p-4 pb-2">
-        <div class="flex items-start justify-between mb-2">
-            <h4 class="font-medium text-gray-900 text-sm leading-5 group-hover:text-indigo-600 transition-colors">
+    <div class="p-3 sm:p-4 pb-2">
+        <div class="flex items-start justify-between gap-2 mb-2">
+            <h4 class="font-medium text-gray-900 text-sm leading-5 group-hover:text-indigo-600 transition-colors line-clamp-2 flex-1 min-w-0">
                 {{ $card->card_title }}
             </h4>
             
             <!-- Card Actions Dropdown -->
-            @can('update', $card)
-                
-                <div class="relative" x-data="{ open: false }">
-                    <button @click.stop="open = !open" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 rounded-md transition-all">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
-                        </svg>
-                    </button>
+            @php
+                // Check user permissions for CRUD
+                $currentUserRole = Auth::user()->role;
+                $projectMember = $board->project->members->where('user_id', Auth::id())->first();
+                $userRoleInProject = $projectMember?->role ?? null;
+                $isProjectCreator = $board->project->created_by === Auth::id();
+                $canEditDelete = $currentUserRole === 'admin' || $isProjectCreator || $userRoleInProject === 'team lead';
+            @endphp
+            
+            @if($canEditDelete)
+                @can('update', $card)
                     
-                    <div x-show="open" @click.away="open = false" 
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="transform opacity-0 scale-95"
-                        x-transition:enter-end="transform opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="transform opacity-100 scale-100"
-                        x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute right-0 top-8 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                        <div class="py-1">
-                            <button @click.stop="$dispatch('edit-card-modal', {{ \Illuminate\Support\Js::from($card) }}); open = false" 
-                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                                Edit Card
-                            </button>
-                            <button @click.stop="
-                                        console.log('🗑️ Delete button clicked for card:', {{ $card->id }}); 
-                                        window.dispatchEvent(new CustomEvent('show-delete-modal', { 
-                                            detail: { 
-                                                cardId: {{ $card->id }}, 
-                                                cardTitle: '{{ addslashes($card->card_title) }}' 
-                                            } 
-                                        })); 
-                                        console.log('📤 Event dispatched');
-                                        open = false
-                                    " 
-                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                                Delete Card
-                            </button>
+                    <div class="relative flex-shrink-0" x-data="{ open: false }">
+                        <button @click.stop="open = !open" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 rounded-md transition-all">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                            </svg>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 top-8 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                            <div class="py-1">
+                                <button @click.stop="$dispatch('edit-card-modal', {{ \Illuminate\Support\Js::from($card) }}); open = false" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit Card
+                                </button>
+                                <button @click.stop="
+                                            console.log('🗑️ Delete button clicked for card:', {{ $card->id }}); 
+                                            window.dispatchEvent(new CustomEvent('show-delete-modal', { 
+                                                detail: { 
+                                                    cardId: {{ $card->id }}, 
+                                                    cardTitle: '{{ addslashes($card->card_title) }}' 
+                                                } 
+                                            })); 
+                                            console.log('📤 Event dispatched');
+                                            open = false
+                                        " 
+                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete Card
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            @endcan
+                @endcan
+            @endif
         </div>
 
         <!-- Card Description -->
         @if($card->description)
-            <p class="text-gray-600 text-xs leading-4 mb-3 line-clamp-2">
+            <p class="text-gray-600 text-xs leading-4 mb-3 line-clamp-2 break-words">
                 {{ Str::limit($card->description, 80) }}
             </p>
         @endif
     </div>
 
     <!-- Card Body -->
-    <div class="px-4 pb-2">
+    <div class="px-3 sm:px-4 pb-2">
         <!-- Priority & Status Badges -->
-        <div class="flex items-center gap-2 mb-3">
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $card->priority_badge_color }}">
+        <div class="flex items-center gap-2 mb-3 flex-wrap">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $card->priority_badge_color }} whitespace-nowrap">
                 {{ ucfirst($card->priority) }}
             </span>
             @if($card->due_date)
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap
                     {{ $card->due_date->isPast() && $card->status !== 'done' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600' }}">
                     {{ $card->due_date->format('M d') }}
                 </span>
@@ -138,8 +149,8 @@
         @if($card->estimated_hours || $card->actual_hours)
             <div class="mb-3">
                 <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-                    <span>Progress</span>
-                    <span>
+                    <span class="truncate">Progress</span>
+                    <span class="whitespace-nowrap ml-2">
                         {{ $card->actual_hours ?? 0 }}h 
                         @if($card->estimated_hours)
                             / {{ $card->estimated_hours }}h
@@ -159,11 +170,11 @@
         @endif
 
         <!-- Card Footer -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-2">
             <!-- Assignees/Creator -->
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 min-w-0 flex-1">
                 @if($card->creator)
-                    <div class="flex items-center">
+                    <div class="flex items-center flex-shrink-0">
                         <div class="w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                             {{ substr($card->creator->username, 0, 1) }}
                         </div>
@@ -172,7 +183,7 @@
 
                 <!-- Show assignments if available -->
                 @if($card->assignments && $card->assignments->count() > 0)
-                    <div class="flex -space-x-1">
+                    <div class="flex -space-x-1 flex-shrink-0">
                         @foreach($card->assignments->take(3) as $assignment)
                             <div class="w-6 h-6 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-medium"
                                  title="{{ $assignment->user->username }}">
@@ -189,11 +200,11 @@
             </div>
 
             <!-- Card Metrics -->
-            <div class="flex items-center space-x-3 text-gray-400">
+            <div class="flex items-center gap-2 sm:gap-3 text-gray-400 flex-shrink-0">
                 <!-- Comments -->
                 @if($card->comments->count() > 0)
                     <div class="flex items-center space-x-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                         </svg>
                         <span class="text-xs">{{ $card->comments->count() }}</span>
@@ -203,7 +214,7 @@
                 <!-- Subtasks -->
                 @if($card->subtasks->count() > 0)
                     <div class="flex items-center space-x-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                         </svg>
                         <span class="text-xs">{{ $card->subtasks->where('is_completed', true)->count() }}/{{ $card->subtasks->count() }}</span>
@@ -214,7 +225,7 @@
     </div>
 
     <!-- Status Change Buttons for Different Roles -->
-    <div class="px-4 pb-3">
+    <div class="px-3 sm:px-4 pb-3">
         @php
             $currentUser = Auth::user();
             $projectMember = $board->project->members->where('user_id', $currentUser->id)->first();
@@ -241,11 +252,6 @@
                 $elapsedSeconds = now()->diffInSeconds($activeTimeLog->start_time);
             }
         @endphp
-        
-        {{-- Debug info (remove after testing) --}}
-        @if($isAssigned && in_array($userRole, ['designer', 'developer']))
-            <!-- Debug: TimeLogs Count: {{ $timeLogsCount }}, Has Active: {{ $hasActiveTracking ? 'YES' : 'NO' }}, Elapsed: {{ $elapsedSeconds }}s -->
-        @endif
 
         {{-- Start Task / Timer Display: For Designer/Developer with assigned card --}}
         @if($isAssigned && in_array($userRole, ['designer', 'developer']))
@@ -274,26 +280,26 @@
                          }
                      }"
                      @click.stop>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <div class="relative">
-                                <svg class="w-5 h-5 text-green-600 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center space-x-2 min-w-0 flex-1">
+                            <div class="relative flex-shrink-0">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                                     <circle cx="10" cy="10" r="4"></circle>
                                 </svg>
-                                <svg class="w-5 h-5 text-green-600 absolute top-0 left-0 animate-spin" style="animation-duration: 2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600 absolute top-0 left-0 animate-spin" style="animation-duration: 2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <div>
-                                <div class="text-xs font-medium text-green-700">Tracking Active</div>
-                                <div class="text-lg font-bold text-green-800 font-mono" x-text="formatTime()">00:00:00</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-medium text-green-700 truncate">Tracking Active</div>
+                                <div class="text-base sm:text-lg font-bold text-green-800 font-mono" x-text="formatTime()">00:00:00</div>
                             </div>
                         </div>
-                        <form action="{{ route('time-logs.stop', $activeTimeLog->id) }}" method="POST" class="inline">
+                        <form action="{{ route('time-logs.stop', $activeTimeLog->id) }}" method="POST" class="inline flex-shrink-0">
                             @csrf
                             <button type="submit"
-                                    class="px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 rounded-md text-xs font-medium transition-colors flex items-center space-x-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="px-2.5 py-1.5 sm:px-3 bg-red-500 text-white hover:bg-red-600 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 whitespace-nowrap">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                                 <span>Stop</span>
@@ -307,8 +313,8 @@
                     @csrf
                     <input type="hidden" name="card_id" value="{{ $card->id }}">
                     <button type="submit"
-                            class="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         Start Task
@@ -319,13 +325,31 @@
 
         {{-- Approve/Request Changes: Only for Team Lead on Review status --}}
         @if($card->status === 'review' && $userRole === 'team lead')
-            <div class="flex space-x-2" 
+            <div @click.stop
                  x-data="{
                      isReviewing: false,
-                     async handleQuickReview(cardId, status) {
+                     showNotesModal: false,
+                     reviewStatus: '',
+                     reviewNotes: '',
+                     cardId: {{ $card->id }},
+                     
+                     openNotesModal(status) {
+                         this.reviewStatus = status;
+                         this.reviewNotes = '';
+                         this.showNotesModal = true;
+                     },
+                     
+                     closeNotesModal() {
+                         this.showNotesModal = false;
+                         this.reviewNotes = '';
+                         this.reviewStatus = '';
+                     },
+                     
+                     async submitReview() {
                          if (this.isReviewing) return;
                          
-                         const confirmMessage = status === 'approved' 
+                         const statusText = this.reviewStatus === 'approved' ? 'approve' : 'request perubahan';
+                         const confirmMessage = this.reviewStatus === 'approved' 
                              ? 'Approve card ini? Status akan diubah ke Done dan assignments akan di-complete.'
                              : 'Request perubahan? Card akan dikembalikan ke Todo.';
                          
@@ -335,10 +359,14 @@
                          
                          try {
                              const formData = new FormData();
-                             formData.append('_token', document.querySelector('meta[name=\"csrf-token\"]').content);
-                             formData.append('status', status);
+                             formData.append('_token', document.querySelector('meta[name=csrf-token]').content);
+                             formData.append('status', this.reviewStatus);
                              
-                             const response = await fetch(`/cards/${cardId}/reviews`, {
+                             if (this.reviewNotes.trim()) {
+                                 formData.append('notes', this.reviewNotes.trim());
+                             }
+                             
+                             const response = await fetch('/cards/' + this.cardId + '/reviews', {
                                  method: 'POST',
                                  body: formData,
                                  headers: { 'Accept': 'application/json' }
@@ -347,36 +375,116 @@
                              const result = await response.json();
                              
                              if (response.ok && result.success) {
-                                 alert(result.message);
+                                 alert(result.message || 'Review berhasil!');
+                                 this.closeNotesModal();
                                  window.location.reload();
                              } else {
                                  alert(result.message || 'Gagal memproses review');
                              }
                          } catch (error) {
-                             console.error('Error:', error);
+                             console.error('❌ Error reviewing card:', error);
                              alert('Terjadi kesalahan saat memproses review');
                          } finally {
                              this.isReviewing = false;
                          }
                      }
                  }"
-                 @click.stop>
-                <button @click="handleQuickReview({{ $card->id }}, 'approved')"
-                        :disabled="isReviewing"
-                        class="flex-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
-                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span x-text="isReviewing ? 'Processing...' : 'Approve'"></span>
-                </button>
-                <button @click="handleQuickReview({{ $card->id }}, 'rejected')"
-                        :disabled="isReviewing"
-                        class="flex-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
-                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                    <span x-text="isReviewing ? 'Processing...' : 'Request Changes'"></span>
-                </button>
+                 class="space-y-2">
+                
+                {{-- Review Buttons --}}
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button @click.stop="openNotesModal('approved')"
+                            :disabled="isReviewing"
+                            class="flex-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Approve</span>
+                    </button>
+                    <button @click.stop="openNotesModal('rejected')"
+                            :disabled="isReviewing"
+                            class="flex-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        <span>Request Changes</span>
+                    </button>
+                </div>
+                
+                {{-- Notes Modal --}}
+                <div x-show="showNotesModal"
+                     x-cloak
+                     @click.stop
+                     class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+                     style="display: none;">
+                    <div @click.stop
+                         x-show="showNotesModal"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-4 sm:p-6">
+                        
+                        {{-- Modal Header --}}
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+                                <span x-text="reviewStatus === 'approved' ? '✅ Approve Card' : '🔄 Request Changes'"></span>
+                            </h3>
+                            <button @click.stop="closeNotesModal()"
+                                    class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        {{-- Card Title --}}
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <p class="text-xs sm:text-sm text-gray-500 mb-1">Card:</p>
+                            <p class="font-medium text-gray-900 text-sm sm:text-base break-words">{{ $card->card_title }}</p>
+                        </div>
+                        
+                        {{-- Notes Input --}}
+                        <div class="mb-4">
+                            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                                Notes <span class="text-gray-400">(Optional)</span>
+                            </label>
+                            <textarea x-model="reviewNotes"
+                                      @click.stop
+                                      rows="4"
+                                      placeholder="Tambahkan catatan untuk developer (opsional)..."
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-xs sm:text-sm"
+                                      maxlength="2000"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span x-text="reviewNotes.length"></span>/2000 karakter
+                            </p>
+                        </div>
+                        
+                        {{-- Action Buttons --}}
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                            <button @click.stop="closeNotesModal()"
+                                    type="button"
+                                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm order-2 sm:order-1">
+                                Cancel
+                            </button>
+                            <button @click.stop="submitReview()"
+                                    :disabled="isReviewing"
+                                    :class="{
+                                        'bg-green-500 hover:bg-green-600': reviewStatus === 'approved',
+                                        'bg-red-500 hover:bg-red-600': reviewStatus === 'rejected'
+                                    }"
+                                    class="flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium text-sm disabled:opacity-50 flex items-center justify-center order-1 sm:order-2">
+                                <svg x-show="isReviewing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span x-text="isReviewing ? 'Processing...' : (reviewStatus === 'approved' ? 'Approve' : 'Request Changes')"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         @endif
     </div>

@@ -4,54 +4,76 @@
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50" x-data="cardsPageData()">
-    <!-- Header Section -->
+    <!-- Header Section - Responsive -->
     <div class="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg">
-        <div class="max-w-full mx-auto px-6 py-6">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Cards Management</h1>
-                    <p class="text-gray-600 mt-1">Manage and track all your tasks across projects</p>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">Cards Management</h1>
+                    <p class="text-sm sm:text-base text-gray-600 mt-1">Manage and track all your tasks across projects</p>
                 </div>
                 
-                <div class="flex items-center space-x-3">
-                    <a href="{{ route('cards.create') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        New Card
-                    </a>
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    @if(Auth::user()->role !== 'member')
+                        <a href="{{ route('cards.create') }}" 
+                           class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex-1 sm:flex-initial">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <span class="hidden sm:inline">New Card</span>
+                            <span class="sm:hidden">New</span>
+                        </a>
+                    @endif
                     
                     <button @click="toggleView()" 
-                            class="inline-flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <svg x-show="currentView === 'grid'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm flex-1 sm:flex-initial">
+                        <svg x-show="currentView === 'grid'" class="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                         </svg>
-                        <svg x-show="currentView === 'list'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="currentView === 'list'" class="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                         </svg>
-                        <span x-text="currentView === 'grid' ? 'List View' : 'Grid View'"></span>
+                        <span class="hidden sm:inline" x-text="currentView === 'grid' ? 'List' : 'Grid'"></span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-<div class="container mx-auto p-6">
-    <!-- Project Selection -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Member View Notice - Responsive -->
+    @if(Auth::user()->role === 'member')
+        <div class="mb-4 sm:mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-xl border border-blue-200/50 shadow-lg p-4 sm:p-5">
+            <div class="flex items-start sm:items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm sm:text-base font-semibold text-blue-900">Member View</h3>
+                    <p class="text-xs sm:text-sm text-blue-700 mt-0.5">You are viewing only cards that are assigned to you.</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Project Selection - Responsive -->
     @if($availableProjects->count() > 0)
-        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-6 mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl font-semibold mb-2">Current Project</h2>
-                    <p class="text-gray-600">Showing cards from: 
+        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">Current Project</h2>
+                    <p class="text-sm sm:text-base text-gray-600 truncate">Showing cards from: 
                         <span class="font-semibold text-indigo-600">{{ $selectedProject ? $selectedProject->project_name : 'No Project Selected' }}</span>
                     </p>
                 </div>
-                <div>
-                    <form method="GET" action="{{ route('cards.index') }}" class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <form method="GET" action="{{ route('cards.index') }}">
                         <select name="project_id" onchange="this.form.submit()" 
-                                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
                             @foreach($availableProjects as $project)
                                 <option value="{{ $project->id }}" {{ $selectedProjectId == $project->id ? 'selected' : '' }}>
                                     {{ $project->project_name }}
@@ -64,136 +86,140 @@
         </div>
     @endif
 
-    <!-- Enhanced Statistics Dashboard -->
-    <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Project Dashboard Statistics</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+    <!-- Enhanced Statistics Dashboard - Responsive -->
+    <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Project Dashboard Statistics</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
             <!-- Total Cards -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">Total</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $cards->total() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Total</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $cards->total() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- Todo Cards -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">Todo</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $cards->where('status', 'todo')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Todo</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $cards->where('status', 'todo')->count() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- In Progress -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">In Progress</p>
-                        <p class="text-2xl font-bold text-blue-600">{{ $cards->where('status', 'in progress')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Progress</p>
+                        <p class="text-xl sm:text-2xl font-bold text-blue-600">{{ $cards->where('status', 'in progress')->count() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- Review -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">Review</p>
-                        <p class="text-2xl font-bold text-yellow-600">{{ $cards->where('status', 'review')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Review</p>
+                        <p class="text-xl sm:text-2xl font-bold text-yellow-600">{{ $cards->where('status', 'review')->count() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- Done -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">Done</p>
-                        <p class="text-2xl font-bold text-green-600">{{ $cards->where('status', 'done')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Done</p>
+                        <p class="text-xl sm:text-2xl font-bold text-green-600">{{ $cards->where('status', 'done')->count() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- High Priority -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-red-400 to-red-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-red-400 to-red-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">High Priority</p>
-                        <p class="text-2xl font-bold text-red-600">{{ $cards->where('priority', 'high')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">High</p>
+                        <p class="text-xl sm:text-2xl font-bold text-red-600">{{ $cards->where('priority', 'high')->count() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- Medium Priority -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">Medium Priority</p>
-                        <p class="text-2xl font-bold text-yellow-600">{{ $cards->where('priority', 'medium')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Medium</p>
+                        <p class="text-xl sm:text-2xl font-bold text-yellow-600">{{ $cards->where('priority', 'medium')->count() }}</p>
                     </div>
                 </div>
             </div>
             
             <!-- Low Priority -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-600">Low Priority</p>
-                        <p class="text-2xl font-bold text-green-600">{{ $cards->where('priority', 'low')->count() }}</p>
+                    <div class="sm:ml-3 text-center sm:text-left">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600">Low</p>
+                        <p class="text-xl sm:text-2xl font-bold text-green-600">{{ $cards->where('priority', 'low')->count() }}</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters Section -->
-    <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-6 mb-6">
+    <!-- Filters Section - Responsive -->
+    <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
         <form method="GET" action="{{ route('cards.index') }}" class="space-y-4">
-            <div class="flex flex-col md:flex-row gap-4">
+            <!-- Hidden input untuk preserve project_id -->
+            <input type="hidden" name="project_id" value="{{ $selectedProjectId }}">
+            
+            <!-- Search Bar - Full Width on Mobile -->
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div class="flex-1">
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Cards</label>
                     <div class="relative">
@@ -207,22 +233,26 @@
                                id="search"
                                value="{{ request('search') }}"
                                placeholder="Search by title or description..."
-                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                               class="block w-full pl-10 pr-3 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
                     </div>
                 </div>
                 <div class="flex items-end">
                     <button type="submit" 
-                            class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                        Search
+                            class="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm sm:text-base rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg">
+                        <span class="hidden sm:inline">Search</span>
+                        <svg class="w-5 h-5 sm:hidden mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Filter Dropdowns - Responsive Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select name="status" id="status" 
-                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            class="block w-full px-3 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
                         <option value="">All Status</option>
                         <option value="todo" {{ request('status') === 'todo' ? 'selected' : '' }}>Todo</option>
                         <option value="in progress" {{ request('status') === 'in progress' ? 'selected' : '' }}>In Progress</option>
@@ -234,7 +264,7 @@
                 <div>
                     <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
                     <select name="priority" id="priority" 
-                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            class="block w-full px-3 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
                         <option value="">All Priority</option>
                         <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
                         <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Medium</option>
@@ -245,9 +275,9 @@
                 <div>
                     <label for="board_id" class="block text-sm font-medium text-gray-700 mb-2">Board</label>
                     <select name="board_id" id="board_id" 
-                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            class="block w-full px-3 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
                         <option value="">All Boards</option>
-                        @foreach(\App\Models\Board::all() as $board)
+                        @foreach($availableBoards as $board)
                             <option value="{{ $board->id }}" {{ request('board_id') == $board->id ? 'selected' : '' }}>
                                 {{ $board->board_name }}
                             </option>
@@ -258,7 +288,7 @@
                 <div>
                     <label for="sort" class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
                     <select name="sort" id="sort" 
-                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            class="block w-full px-3 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
                         <option value="created_at" {{ request('sort') === 'created_at' ? 'selected' : '' }}>Created Date</option>
                         <option value="due_date" {{ request('sort') === 'due_date' ? 'selected' : '' }}>Due Date</option>
                         <option value="priority" {{ request('sort') === 'priority' ? 'selected' : '' }}>Priority</option>
@@ -267,16 +297,20 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+            <!-- Action Buttons - Responsive -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-200">
                 <div>
                     <a href="{{ route('cards.index') }}" 
-                       class="text-sm text-gray-600 hover:text-gray-800 underline">
+                       class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         Clear All Filters
                     </a>
                 </div>
-                <div class="flex space-x-3">
+                <div class="flex gap-2 sm:gap-3">
                     <button type="submit" 
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                            class="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg">
                         Apply Filters
                     </button>
                 </div>
@@ -284,21 +318,24 @@
         </form>
     </div>
 
+    <!-- Cards Container -->
     <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200/50 bg-gray-50/50">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    Cards ({{ $cards->total() }} total)
+        <!-- Header -->
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+                    Cards <span class="text-indigo-600">({{ $cards->total() }} total)</span>
                 </h3>
-                <div class="text-sm text-gray-600">
+                <div class="text-xs sm:text-sm text-gray-600">
                     Showing {{ $cards->firstItem() ?? 0 }} - {{ $cards->lastItem() ?? 0 }} of {{ $cards->total() }} results
                 </div>
             </div>
         </div>
-        <div class="p-6">
+        
+        <div class="p-4 sm:p-6">
             @if($cards->count() > 0)
-                <!-- Grid View - Professional Card Design -->
-                <div x-show="currentView === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" x-transition>
+                <!-- Grid View - Responsive -->
+                <div x-show="currentView === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" x-transition>
                     @foreach($cards as $card)
                         <div class="group relative bg-white rounded-2xl border border-gray-200/60 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden backdrop-blur-sm hover:border-indigo-200 hover:scale-[1.02] hover:-translate-y-1">
                             <!-- Priority Stripe -->
@@ -640,22 +677,124 @@
                     <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
-                    <p class="text-gray-600 mb-6">Try adjusting your search or filter criteria.</p>
-                    <a href="{{ route('cards.create') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Create First Card
-                    </a>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                        @if(Auth::user()->role === 'member')
+                            No assigned cards found
+                        @else
+                            No cards found
+                        @endif
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        @if(Auth::user()->role === 'member')
+                            You don't have any cards assigned to you yet, or try adjusting your search or filter criteria.
+                        @else
+                            Try adjusting your search or filter criteria.
+                        @endif
+                    </p>
+                    @if(Auth::user()->role !== 'member')
+                        <a href="{{ route('cards.create') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Create First Card
+                        </a>
+                    @endif
                 </div>
             @endif
         </div>
         
+        <!-- Custom Pagination -->
         @if($cards->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200/50 bg-gray-50/50">
-                {{ $cards->appends(request()->query())->links() }}
+            <div class="px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <!-- Pagination Info -->
+                    <div class="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+                        Showing <span class="font-semibold text-gray-900">{{ $cards->firstItem() ?? 0 }}</span> to 
+                        <span class="font-semibold text-gray-900">{{ $cards->lastItem() ?? 0 }}</span> of 
+                        <span class="font-semibold text-gray-900">{{ $cards->total() }}</span> results
+                    </div>
+                    
+                    <!-- Pagination Links -->
+                    <nav class="inline-flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2" aria-label="Pagination">
+                        {{-- Previous Button --}}
+                        @if ($cards->onFirstPage())
+                            <span class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </span>
+                        @else
+                            <a href="{{ $cards->appends(request()->query())->previousPageUrl() }}" 
+                               class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-indigo-600 bg-white border border-gray-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </a>
+                        @endif
+
+                        {{-- Page Numbers --}}
+                        @php
+                            $start = max($cards->currentPage() - 1, 1);
+                            $end = min($start + 2, $cards->lastPage());
+                            $start = max($end - 2, 1);
+                        @endphp
+
+                        @if($start > 1)
+                            <a href="{{ $cards->appends(request()->query())->url(1) }}" 
+                               class="hidden sm:inline-flex px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-all duration-200 shadow-sm hover:shadow">
+                                1
+                            </a>
+                            @if($start > 2)
+                                <span class="hidden sm:inline-flex px-2 py-2 text-sm text-gray-500">...</span>
+                            @endif
+                        @endif
+
+                        @for ($page = $start; $page <= $end; $page++)
+                            @if ($page == $cards->currentPage())
+                                <span class="px-3 py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-md">
+                                    {{ $page }}
+                                </span>
+                            @else
+                                <a href="{{ $cards->appends(request()->query())->url($page) }}" 
+                                   class="hidden sm:inline-flex px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-all duration-200 shadow-sm hover:shadow">
+                                    {{ $page }}
+                                </a>
+                            @endif
+                        @endfor
+
+                        @if($end < $cards->lastPage())
+                            @if($end < $cards->lastPage() - 1)
+                                <span class="hidden sm:inline-flex px-2 py-2 text-sm text-gray-500">...</span>
+                            @endif
+                            <a href="{{ $cards->appends(request()->query())->url($cards->lastPage()) }}" 
+                               class="hidden sm:inline-flex px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-all duration-200 shadow-sm hover:shadow">
+                                {{ $cards->lastPage() }}
+                            </a>
+                        @endif
+
+                        {{-- Next Button --}}
+                        @if ($cards->hasMorePages())
+                            <a href="{{ $cards->appends(request()->query())->nextPageUrl() }}" 
+                               class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-indigo-600 bg-white border border-gray-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        @else
+                            <span class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </span>
+                        @endif
+
+                        {{-- Mobile: Show current page info --}}
+                        <span class="sm:hidden px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg">
+                            {{ $cards->currentPage() }} / {{ $cards->lastPage() }}
+                        </span>
+                    </nav>
+                </div>
             </div>
         @endif
     </div>

@@ -80,7 +80,7 @@
                     </svg>
                 </div>
                 
-                <h1 class="text-4xl font-bold mb-3">JIRA Plagiat Pro</h1>
+                <h1 class="text-4xl font-bold mb-3"> TaskFlow</h1>
                 {{-- text-4xl = ukuran text extra large --}}
                 
                 <p class="text-xl text-blue-100 font-light">
@@ -153,22 +153,22 @@
                         }, 1000)">
                 {{-- Quote muncul paling terakhir setelah 1 detik --}}
                 
-                <blockquote class="text-lg text-blue-100 italic font-light">
+                {{-- <blockquote class="text-lg text-blue-100 italic font-light"> --}}
                     {{-- 
                         blockquote = elemen HTML untuk kutipan
                         italic = teks miring
                         font-light = ketebalan font tipis
                     --}}
-                    "The best project management tool we've ever used."
+                    {{-- "The best project management tool we've ever used."
                 </blockquote>
-                <cite class="text-sm text-blue-200 mt-2 block">
+                <cite class="text-sm text-blue-200 mt-2 block"> --}}
                     {{-- 
                         cite = elemen HTML untuk sumber kutipan
                         text-blue-200 = warna biru lebih terang
                         block = tampilkan sebagai block element (new line)
                     --}}
-                    — Sarah Johnson, Tech Lead at InnovateCorp
-                </cite>
+                    {{-- — Sarah Johnson, Tech Lead at InnovateCorp
+                </cite> --}}
             </div>
         </div>
     </div>

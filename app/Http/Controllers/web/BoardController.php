@@ -10,6 +10,7 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class BoardController extends Controller
@@ -44,6 +45,9 @@ class BoardController extends Controller
             $board = Board::create($validatedData);
             
             DB::commit();
+            
+            // Clear cache untuk memastikan board baru muncul
+            Cache::forget('project_' . $board->project_id);
 
             return redirect()
                 ->route('projects.show', $board->project_id)
@@ -71,12 +75,31 @@ class BoardController extends Controller
     public function show(string $id)
     {
         try {
+            // Get current user info
+            $currentUserId = Auth::id();
+            $currentUser = Auth::user();
+            
             // Eager loading board dengan cards, assignments, comments, timeLogs
             $board = Board::with([
                 'project',
                 'project.members.user',
-                'cards' => function ($query) {
+                'cards' => function ($query) use ($currentUserId, $currentUser) {
                     $query->orderBy('position')->orderBy('created_at');
+                    
+                    // Filter cards berdasarkan role user
+                    // Admin dan creator project bisa lihat semua
+                    // Team Lead bisa lihat semua cards dalam project mereka
+                    // Member hanya bisa lihat cards yang assigned kepada mereka
+                    if ($currentUser->role === 'member') {
+                        // Check apakah user adalah team lead di project ini
+                        $query->whereHas('board.project.members', function ($q) use ($currentUserId) {
+                            $q->where('user_id', $currentUserId)
+                              ->where('role', 'team lead');
+                        })
+                        ->orWhereHas('assignments', function ($q) use ($currentUserId) {
+                            $q->where('user_id', $currentUserId);
+                        });
+                    }
                 },
                 'cards.creator',
                 'cards.subtasks',
@@ -90,6 +113,13 @@ class BoardController extends Controller
                 $board->project->created_by !== Auth::id() && !(Auth::user()->role == 'admin') ) {
                 abort(403, 'Anda tidak memiliki akses ke board ini.');
             }
+            
+            // Check user role in project (for view conditional logic)
+            $userProjectMember = $board->project->members->firstWhere('user_id', $currentUserId);
+            $userRoleInProject = $userProjectMember ? $userProjectMember->role : null;
+            $isProjectCreator = $board->project->created_by === $currentUserId;
+            $isAdmin = $currentUser->role === 'admin';
+            $isTeamLead = $userRoleInProject === 'team lead';
 
             // Group cards by status untuk kanban columns
             $cardsByStatus = $board->cards->groupBy('status');
@@ -106,8 +136,15 @@ class BoardController extends Controller
                 })->count()
             ];
 
-            // dd($board->cards[0]->assignments);
-            return view('boards.show', compact('board', 'cardsByStatus', 'stats'));
+            return view('boards.show', compact(
+                'board', 
+                'cardsByStatus', 
+                'stats',
+                'userRoleInProject',
+                'isProjectCreator',
+                'isAdmin',
+                'isTeamLead'
+            ));
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Board tidak ditemukan: ' . $e->getMessage());
