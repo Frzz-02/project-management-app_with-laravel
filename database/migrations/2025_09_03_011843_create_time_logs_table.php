@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('time_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(\App\Models\Card::class, 'card_id')->constrained('cards')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\Subtask::class, 'subtask_id')->constrained('subtasks')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Subtask::class, 'subtask_id')->nullable()->constrained('subtasks')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\User::class, 'user_id')->constrained('users')->onDelete('cascade');
             $table->timestamp('start_time');
             $table->timestamp('end_time')->nullable();

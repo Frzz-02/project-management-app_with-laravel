@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         $this->call(TestDataSeeder::class);
-        $this->call(ProjectSeeder::class);
-        $this->call(BoardCardSeeder::class);
+        // $this->call(ProjectSeeder::class); // Disabled temporarily - needs Faker
+        // $this->call(BoardCardSeeder::class); // Disabled temporarily - needs Faker
 
         User::create([
             'username' => 'Test User',
@@ -27,6 +27,9 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'email' => 'admin@test.com',
             'password' => Hash::make('password'),
+            'phone' => null, // Optional
+            'profile_picture' => null, // Optional
+            'bio' => 'Administrator of the system', // Optional
         ]);
     }
 }

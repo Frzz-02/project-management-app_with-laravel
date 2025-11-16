@@ -15,13 +15,20 @@ class ProjectSeeder extends Seeder
     public function run(): void
     {
         Project::factory()->count(5)->create();
-        
-        // Project::create([
-        //     'project_name' => 'Project 1',
-        //     'description' => 'lorem ipsum dolor sit amet',
-        //     'created_by' => '1',
-        //     'deadline' => '2028-01-01 10:00:00',
-        //     'created_at' => '2024-01-01 10:00:00',
-        // ]);
     }
 }
+
+
+
+
+
+
+
+
+// Project::create([
+//     'project_name' => 'Project 1',
+//     'description' => 'lorem ipsum dolor sit amet',
+//     'created_by' => '1',
+//     'deadline' => '2028-01-01 10:00:00',
+//     'created_at' => '2024-01-01 10:00:00',
+// ]);
