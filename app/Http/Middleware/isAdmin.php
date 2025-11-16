@@ -15,10 +15,23 @@ class isAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // dd();
-        if (!auth()->check() || $request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Check if user is logged in
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
+        
+        // Check if user is admin
+        if ($request->user()->role !== 'admin') {
+            // If AJAX request, return JSON
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+            }
+            
+            // If web request, redirect to dashboard with error message
+            return redirect()->route('dashboard')
+                ->with('error', 'Akses ditolak. Halaman ini hanya untuk Admin.');
+        }
+        
         return $next($request);
     }
 }
