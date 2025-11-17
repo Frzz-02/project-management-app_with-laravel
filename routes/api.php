@@ -26,11 +26,24 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('card', CardController::class);
     
     // fitur subtasks untuk todolist functionality
-    Route::apiResource('subtasks', \App\Http\Controllers\api\SubtaskController::class);
-    Route::patch('subtasks/{subtask}/toggle', [\App\Http\Controllers\api\SubtaskController::class, 'toggle']);
+    Route::apiResource('subtasks', \App\Http\Controllers\api\SubtaskController::class)->names([
+        'index' => 'api.subtasks.index',
+        'store' => 'api.subtasks.store',
+        'show' => 'api.subtasks.show',
+        'update' => 'api.subtasks.update',
+        'destroy' => 'api.subtasks.destroy',
+    ]);
+    Route::patch('subtasks/{subtask}/toggle', [\App\Http\Controllers\api\SubtaskController::class, 'toggle'])->name('api.subtasks.toggle');
     
     // fitur komentar dengan card relationship
-    Route::apiResource('comments', \App\Http\Controllers\api\CommentController::class);
+    Route::apiResource('comments', \App\Http\Controllers\api\CommentController::class)
+    ->names([
+        'index' => 'api.comments.index',
+        'store' => 'api.comments.store',
+        'show' => 'api.comments.show',
+        'update' => 'api.comments.update',
+        'destroy' => 'api.comments.destroy',
+    ]);
     Route::get('cards/{card}/comments', [\App\Http\Controllers\api\CommentController::class, 'byCard']);
 
 

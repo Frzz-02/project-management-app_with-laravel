@@ -308,8 +308,6 @@ Route::middleware('auth')->group(function () {
 
 
 
-
-    
     /**
      * Time Tracking Routes
      * ====================
